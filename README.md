@@ -15,10 +15,13 @@ Frequency-Following Response toolkit containing various DAQ, online/offline anal
 
 > from bin import FFR
 > ffr = FFR.FFR()
-Load path to FFR
+
+## Load path to FFR
 > path = "sample/202692/Harmonique_LE85dB/Meta_AVG_data.json"
 > ffr.load_path(path)
-Get FFR sepctral component waveforms
+
+##Get FFR sepctral component waveforms
 > waveforms = ffr.load_AVG()
-Get patient data
+
+##Get patient data
 > patient_data = ffr.load_metadata()
