@@ -30,7 +30,10 @@ class FFR():
                      'Channel-H':{'EFR':[],'EFR**':[],'EFR***':[],'CDT':[],'CDT*':[],'F1':[],'F2':[],'ABR':[],'Noise':[]} }
 
         _temppath      = os.path.dirname(os.getcwd())
-        self.conf_path = os.path.join(_temppath , "conf" , "display.json")
+        # print("_temppath = ",_temppath)
+        self.conf_path = os.path.join("conf" , "display.json")
+        print(self.conf_path)
+        # self.conf_path = os.path.join(_temppath , "conf" , "display.json")
 
         #self.conf_path = 'C:/Users/Tauonium/Documents/FFR_App/conf/display.json'
 
@@ -181,6 +184,8 @@ class FFR():
                     fmin = (fc+300)/(self.fs/2)
                     fmax = (4000)/(self.fs/2)
                     b, a = signal.butter(4, [fmin,fmax], 'bandstop')
+                filtSC[:,idx] = signal.filtfilt(b, a, SCwfm[:,idx], padlen=150)
+                print(fmin*(self.fs/2), fmax*(self.fs/2))
         else:
             filtSC = []
             fc = self.get_frequency(SCstring)
@@ -219,11 +224,11 @@ class FFR():
 
         return RV, CV, RH, CH
 
-    def compute_spectra(self,SC):
+    def compute_spectra(self,SC,scale):
         spectra = SC
         for channel in SC:
             for sc_string in SC[channel]:
-                _tmp = np.absolute(np.fft.fft(SC[channel][sc_string]))
+                _tmp = scale*np.absolute(np.fft.fft(SC[channel][sc_string]))
                 spectra[channel][sc_string]=_tmp[0:self.Nf]
 
         _tmpV = np.absolute(np.fft.fft(SC["Channel-V"]["F1"]+SC["Channel-V"]["F2"]))
@@ -405,16 +410,16 @@ class FFR():
             plt.close()
         return outputwfm, outputlabel, outputlabelpos
 
-    def plot_spectra(self):
+    def plot_spectra(self,scale=1):
         SC           = self.load_AVG()
         Noise_V      = SC["Channel-V"]["Noise"]
         Noise_H      = SC["Channel-H"]["Noise"]
         #♀SC           = self.order_SCs(SC)
-        fft_SC       = self.compute_spectra(SC)
+        fft_SC       = self.compute_spectra(SC,scale)
 
-        Noisefloor_V = np.absolute(np.fft.fft(Noise_V))
+        Noisefloor_V = np.absolute(scale*np.fft.fft(Noise_V))
         Noisefloor_V = Noisefloor_V[0:self.Nf]
-        Noisefloor_H = np.absolute(np.fft.fft(Noise_H))
+        Noisefloor_H = np.absolute(scale*np.fft.fft(Noise_H))
         Noisefloor_H = Noisefloor_H[0:self.Nf]
 
 
@@ -541,7 +546,7 @@ if __name__ == "__main__":
         #path = os.path.join(_temppath , "Data", "183527" , "Harmonique_LE" , "85dB" , "Meta_AVG_data.json")
 
         #path = "C:\\Users\\Delpau\\Desktop\\FFR_RZ6\\2020\\209998\\ENV1000_RE85dB\\Meta_AVG_data.json"
-        path = "/media/ergonium/KINGSTON/AnalyseFFR_LV/Patients&Subjects/NewNH20172018/170392/Harmonique_RE/85dB/Meta_AVG_data.json"
+        path = "sample/202692/Harmonique_LE85dB/Meta_AVG_data.json"
         print('loading test path')
         print(path)
 
@@ -550,5 +555,5 @@ if __name__ == "__main__":
     ffr.load_path(path)
 
     ffr.plot_recording()
-    ffr.plot_spectra()
+    ffr.plot_spectra(scale = 10)
     #SC = ffr.load_AVG()
