@@ -1,0 +1,14 @@
+/Examples/
+Examples/
+/GUI/
+/icon/
+/__pycache__/
+/pyqtgraph-develop/
+/scripts/
+latency_age.py
+main*
+*main
+roi_test.py
+test.py
+test2.py
+*.pyc
