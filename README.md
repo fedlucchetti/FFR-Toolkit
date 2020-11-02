@@ -5,7 +5,6 @@ Frequency-Following Response toolkit containing various DAQ, online/offline anal
 
 # Demo
 
-
 > python3 bin/FFR.py
 
 # Visualize patient FFR
