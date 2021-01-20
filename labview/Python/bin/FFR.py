@@ -25,9 +25,10 @@ class FFR():
         self.t         = self.dt*np.array([x for x in range(self.Nt)])
         self.f         = self.df*np.array([x for x in range(self.Nf)])
         self.SCstring  = ['EFR','EFR','F1','F1','F2','F2','CDT','CDT','ABR','ABR']
+        self.path2control = "../../data/control/"
 
         self.initwaveforms = {'Channel-V':{'EFR':[],'EFR**':[],'EFR***':[],'CDT':[],'CDT*':[],'F1':[],'F2':[],'ABR':[],'Noise':[]},\
-                     'Channel-H':{'EFR':[],'EFR**':[],'EFR***':[],'CDT':[],'CDT*':[],'F1':[],'F2':[],'ABR':[],'Noise':[]} }
+                              'Channel-H':{'EFR':[],'EFR**':[],'EFR***':[],'CDT':[],'CDT*':[],'F1':[],'F2':[],'ABR':[],'Noise':[]} }
 
         _temppath      = os.path.dirname(os.getcwd())
         # self.conf_path = os.path.join(_temppath , "conf" , "display.json")
@@ -262,7 +263,7 @@ class FFR():
 
         return index
 
-    def list_all(self):
+    def list_all(self,group='control',avg_json_folder_path=None):
         name      = list()
         number    = list()
         date      = list()
@@ -272,7 +273,10 @@ class FFR():
         code      = list()
         path2json = list()
         # root    = '/media/fedlucchetti/KINGSTON/AnalyseFFR_LV/Patients&Subjects/NewNH20172018'
-        root    = "G:/AnalyseFFR_LV/Patients&Subjects/NewNH20172018/"
+        if group=="control":
+            root    = self.path2control
+        elif avg_json_folder_path!=None:
+            root = avg_json_folder_path
         pattern = "*.json"
         for path, subdirs, files in os.walk(root):
             for filename in files:
