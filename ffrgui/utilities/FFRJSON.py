@@ -11,8 +11,8 @@ from fnmatch import fnmatch
 #from pathlib import Path, PureWindowsPath
 
 
-class FFR():
-    name = "FFR"
+class FFRJSON():
+    name = "FFRJSON"
 
     def __init__(self):
         self.home_dir  = ''
@@ -30,14 +30,11 @@ class FFR():
                      'Channel-H':{'EFR':[],'EFR**':[],'EFR***':[],'CDT':[],'CDT*':[],'F1':[],'F2':[],'ABR':[],'Noise':[]} }
 
         _temppath      = os.path.dirname(os.getcwd())
-        # print("_temppath = ",_temppath)
-        self.conf_path = os.path.join("conf" , "display.json")
-        print(self.conf_path)
-        # self.conf_path = os.path.join(_temppath , "conf" , "display.json")
+        print("FFR.py",_temppath)
+        self.path_database = os.path.join(_temppath,"Python","bin","NeuralNet","data")
+        self.path_conf = os.path.join("conf","display.json")
 
-        #self.conf_path = 'C:/Users/Tauonium/Documents/FFR_App/conf/display.json'
-
-        with open(self.conf_path) as data_file:
+        with open(self.path_conf) as data_file:
             display = json.load(data_file)
 
         self.font_ticks   = int(display["font_size"]["ticks"])
@@ -63,15 +60,12 @@ class FFR():
         self.path = path
         _dir = os.path.split(path)
         self.home_dir = _dir[0]
-        print('dir home',self.home_dir)
         if os.path.exists(os.path.join(_dir[0],'Signal_Spectra')):
             pass
         else:
-            print(os.path.join(_dir[0],'Signal_Spectra'))
+            # print(os.path.join(_dir[0],'Signal_Spectra'))
             try:os.mkdir(os.path.join(_dir[0],'Signal_Spectra'))
             except: print('error creating ',os.path.join(_dir[0],'Signal_Spectra'))
-
-
 
     def order_SCs(self,SC):
         _SC = np.zeros([self.Nt,10])
@@ -100,24 +94,42 @@ class FFR():
 
     def load_json(self):
         data = []
-        with open(self.path) as data_file:
-            data = json.load(data_file)
+        with open(self.path) as data_file: data = json.load(data_file)
         return data
 
-    def load_AVG(self,waveforms=None):
+    def load_AVG(self,sc_string,channel):
+        json_path = self.path
+        with open(json_path) as data_file: data = json.load(data_file)
+        signal = np.array(data["FFR"][channel][sc_string]["AVG"]["Waveform"])
+        noise  = np.array(data["FFR"][channel]["Noise"]["AVG"]["Waveform"])
+        return signal, noise
+
+    def load_AVGs(self,waveforms=None):
 
         if waveforms == None:waveforms = self.initwaveforms
         #if json_path == None: json_path = self.path
         json_path = self.path
         print('FFR.py load JSON path: ',json_path)
-
+        sc_list = []
         with open(json_path) as data_file: data = json.load(data_file)
 
         for channel in data["FFR"]:
             for sc_string in data["FFR"][channel]:
                 waveforms[channel][sc_string]= 10**-2 * np.array(data["FFR"][channel][sc_string]["AVG"]["Waveform"])
-        return waveforms
+                sc_list.append(sc_string+" "+channel[-1])
+        return waveforms, sc_list
 
+    def get_meta_data(self):
+        frequency = str(round(int(data["MetaData"]["Stimulus"]["F2"])-int(data["MetaData"]["Stimulus"]["F1"])))
+        stim      = 'EFR' + frequency
+        number    = data["MetaData"]["Patient"]["Number"]
+        name      = data["MetaData"]["Patient"]["Nom"] + " " + data["MetaData"]["Patient"]["Prenom"]
+        try:
+            ear    = data["MetaData"]["Patient"]["Oreille"]
+        except:
+            ear    = data["MetaData"]["Patient"]["Oreille "]
+        level  =  data["MetaData"]["Stimulus"]["Level[dB]"]
+        return name,number,stim,ear,level
 
 
     def get_frequency(self,SCstring):
@@ -126,8 +138,6 @@ class FFR():
         f2       = float(metadata["Stimulus"]["F2"])
 
         f        = None
-        print('wsfvwsdf = ',SCstring[0:3])
-        #if fnmatch(SCstring, 'EFR'): print('yeeeeeeeeeeeeeeeeee')
         if SCstring[0:2] == 'F1' :
             f = f1
         elif SCstring[0:2] == 'F2':
@@ -276,13 +286,14 @@ class FFR():
         level     = list()
         code      = list()
         path2json = list()
-        root    = '/media/ergonium/KINGSTON/AnalyseFFR_LV/Patients&Subjects/NewNH20172018'
+        root      = self.path_database
         pattern = "*.json"
-        for path, subdirs, files in os.walk(root):
+        for subpath, subdirs, files in os.walk(root):
+            # print("ffr.py path = ",path)
             for filename in files:
                 if fnmatch(filename, pattern):
+                    path = os.path.join(subpath, filename)
 
-                    path = os.path.join(path, filename)
                     path2json.append(path)
                     with open(path) as data_file:
                         data = json.load(data_file)
@@ -290,7 +301,7 @@ class FFR():
                        or data["MetaData"]["Patient"]["Prenom"]     != None \
                        or data["MetaData"]["Patient"]["Number"]     != None \
                        or data["MetaData"]["date string"]           != None \
-                       or data["MetaData"]["Patient"]["Oreille"]    != None \
+                       or data["MetaData"]["Patient"]["Oreille "]    != None \
                        or data["MetaData"]["Stimulus"]["Level[dB]"] != None :
                         year      = data["MetaData"]["date string"]
                         year      = year[len(year)-2:len(year)]
@@ -300,11 +311,11 @@ class FFR():
                         number.append(year + data["MetaData"]["Patient"]["Number"])
                         date.append(data["MetaData"]["date string"])
                         stim.append('EFR' + frequency)
-                        ear.append(data["MetaData"]["Patient"]["Oreille"])
+                        ear.append(data["MetaData"]["Patient"]["Oreille "])
                         level.append(str(data["MetaData"]["Stimulus"]["Level[dB]"]))
                         code.append(''.join([data["MetaData"]["Patient"]["Nom"]  , ' ' , data["MetaData"]["Patient"]["Prenom"] ,\
                                             year + data["MetaData"]["Patient"]["Number"]                                       ,\
-                                            data["MetaData"]["Patient"]["Oreille"]                                             ,\
+                                            data["MetaData"]["Patient"]["Oreille "]                                             ,\
                                             str(data["MetaData"]["Stimulus"]["Level[dB]"])                                     ,\
                                             'EFR' , frequency                                                                   ]))
 
@@ -313,105 +324,9 @@ class FFR():
         return name,number,date,stim,ear,level,path2json,code
 
 
-    def plot_recording(self,export=True,display=True):
-
-
-        SC                               = self.load_AVG()
-        RV, CV, RH, CH                   = self.compute_RC(SC)
-        SC                               = self.order_SCs(SC)
-        outputwfm                        = np.array([])
-        outputlabelpos                   = np.array([[],[]])
-        outputlabel                      = list()
-
-
-        plt.figure()
-        fig, ax = plt.subplots()
-
-        # stimulus
-        stim = self.generate_stimulus()
-        stim = stim/max(stim)*max(RV)
-        plt.plot(self.t*1000,-stim  + 3*max(stim),'k',linewidth=self.width_line/2)
-        outputwfm = np.append(outputwfm,-stim  + 3*max(stim),axis=0)
-        plt.text(-20, 3*max(stim), 'Stimulus',fontsize=self.font_text,color='k')
-        outputlabelpos = np.append(outputlabelpos, [[-20],[3*max(stim)]], axis=1)
-        outputlabel = np.append(outputlabel,'Stimulus')
-
-        # R&C
-        plt.plot(self.t*1000,RV,'r',linewidth=self.width_line/2)
-        plt.plot(self.t*1000,CV,'b',linewidth=self.width_line/2)
-        outputwfm = np.append(outputwfm,RV,axis=0)
-        outputwfm = np.append(outputwfm,CV,axis=0)
-        xpos = np.average(RV)
-        plt.text(-20, xpos, 'R',fontsize=self.font_text,color=self.color_R)
-        plt.text(-16, xpos, '&',fontsize=self.font_text,color='k')
-        plt.text(-12, xpos, 'C',fontsize=self.font_text,color=self.color_C)
-        plt.text(-6,  xpos, 'V',fontsize=self.font_text,color='k')
-        outputlabelpos = np.append(outputlabelpos, [[-20],[xpos]], axis=1)
-        outputlabel = np.append(outputlabel,'R V')
-        outputlabel = np.append(outputlabel,'C V')
-
-        DC                               = np.abs(np.min(RV))+np.max(RV)
-        plt.plot(self.t*1000,RH-DC,'r',linewidth=self.width_line/2)
-        plt.plot(self.t*1000,CH-DC,'b',linewidth=self.width_line/2)
-        outputwfm = np.append(outputwfm,RH-DC,axis=0)
-        outputwfm = np.append(outputwfm,CH-DC,axis=0)
-        outputlabel = np.append(outputlabel,'R H')
-        outputlabel = np.append(outputlabel,'C H')
-
-        xpos = np.average(RH-DC)
-        plt.text(-20, xpos, 'R',fontsize = self.font_text,color=self.color_R)
-        plt.text(-16, xpos, '&',fontsize = self.font_text,color='k')
-        plt.text(-12, xpos, 'C',fontsize = self.font_text,color=self.color_C)
-        plt.text(-6,  xpos, 'H',fontsize = self.font_text,color='k')
-        outputlabelpos = np.append(outputlabelpos, [[-20],[xpos]], axis=1)
-
-
-        DC                               = DC+2*np.abs(np.min(RH))+np.max(RH)
-        DC                               = DC+self.compute_offsets(SC)
-
-        # gPTPV waveforms
-        filt_SC = self.filter_SC(SC,self.SCstring)
-        for idx in range(len(DC)):
-            if idx%2==0:
-                color = self.color_V
-                text  = self.SCstring[idx] + ' V'
-            else:
-                color = self.color_H
-                text  = self.SCstring[idx] + ' H'
-
-            plt.plot(self.t*1000,filt_SC[:,idx]-DC[idx],color,linewidth=self.width_line)
-            plt.text(-20, np.average(SC[:,idx]-DC[idx]),text,fontsize=self.font_text)
-            outputwfm = np.append(outputwfm,filt_SC[:,idx]-DC[idx],axis=0)
-            outputlabelpos = np.append(outputlabelpos, [[-20],[np.average(SC[:,idx]-DC[idx])]], axis=1)
-            outputlabel = np.append(outputlabel,text)
-
-        plt.xlabel('Temps [ms]',fontsize=self.font_axes)
-        plt.xlim([-25,98])
-        plt.xticks([0,10,20,30,40,50,60,70,80],['0','10','20','30','40','50','60','70','80'],fontsize=self.font_ticks)
-        labels = [item.get_text() for item in ax.get_yticklabels()]
-        empty_string_labels = ['']*len(labels)
-        ax.set_yticklabels(empty_string_labels)
-        plt.grid(axis='x')
-        plt.errorbar(86, 0 , yerr=0.1/(10**9), uplims=True, lolims=True,label='uplims=True, lolims=True',color=self.color_scale)
-        plt.text(91, 0, '0.1 $\mu$V',fontsize=self.font_text,rotation=90,verticalalignment='center')
-
-        header = 'FFR  \n' + self.generate_header()
-        plt.title(header,fontsize=self.font_text)
-
-
-        _tmp    = os.path.split(self.path)
-        outpath = os.path.join(_tmp[0] , "Signal_Spectra" , "temporal.png")
-        print(outpath)
-        #outpath = "/media/ergonium/Données/FFR/FFR_App/Data/183527/Harmonique_LE/85dB/Signal_Spectra/temporal.png"
-
-        if export: plt.savefig(outpath,quality=100,format='png',dpi=800)
-        if display:
-            plt.show()
-            plt.close()
-        return outputwfm, outputlabel, outputlabelpos
 
     def plot_spectra(self,scale=1):
-        SC           = self.load_AVG()
+        SC           = self.load_AVGs()
         Noise_V      = SC["Channel-V"]["Noise"]
         Noise_H      = SC["Channel-H"]["Noise"]
         #♀SC           = self.order_SCs(SC)
@@ -527,33 +442,3 @@ class FFR():
                 pass
                 #plt.show()
             plt.close()
-
-
-
-
-
-
-
-if __name__ == "__main__":
-
-
-    _temppath     = os.path.dirname(os.getcwd())
-    if len(sys.argv[1:])!=0:
-        path = sys.argv[1]
-        print('loading input path')
-        print(path)
-    else:
-        #path = os.path.join(_temppath , "Data", "183527" , "Harmonique_LE" , "85dB" , "Meta_AVG_data.json")
-
-        #path = "C:\\Users\\Delpau\\Desktop\\FFR_RZ6\\2020\\209998\\ENV1000_RE85dB\\Meta_AVG_data.json"
-        path = "sample/202692/Harmonique_LE85dB/Meta_AVG_data.json"
-        print('loading test path')
-        print(path)
-
-
-    ffr = FFR()
-    ffr.load_path(path)
-
-    ffr.plot_recording()
-    ffr.plot_spectra(scale = 10)
-    #SC = ffr.load_AVG()

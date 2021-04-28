@@ -13,8 +13,8 @@ Frequency-Following Response toolkit containing various DAQ, online/offline anal
 
 # Class usage
 
-> from bin import FFR
-> ffr = FFR.FFR()
+> from ffrgui.utilities import FFRJSON
+> ffr = FFRJSON.FFRJSON()
 
 ## Load path to FFR
 > path = "sample/202692/Harmonique_LE85dB/Meta_AVG_data.json"
