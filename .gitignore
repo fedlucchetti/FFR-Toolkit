@@ -4,6 +4,7 @@ examples/
 data/
 /labview/
 *egg-info
+conf/databasepath.json
 
 *__pycache__
 *.pyc

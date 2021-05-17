@@ -25,11 +25,19 @@ class Signal(object):
 
         return waveforms, scale_factor
 
-    def get_channel_sc(self,label):
-        channel = 'Channel-' + label[len(label)-1]
-        sc = label[len(label)-3::-1]
-        sc = sc[::-1]
-        return channel, sc
+
+    def filter_current_waveform(self):
+        waveform = self.maingui.workspace.get_waveform(self.maingui.current_id)
+        filters  = self.maingui.workspace.current_workspace[self.maingui.current_id]['Filters']
+        for id in filters:
+            if filters[id]['type']=='pass':type='bandpass'
+            elif filters[id]['type']=='stop':type='bandstop'
+            fmin     = filters[id]['state']['pos'][0]
+            fmax     = fmin+filters[id]['state']['pos'][0]
+            b, a     = signal.butter(4, [fmin,fmax], type,fs=self.ffrutils.fs)
+            waveform = signal.filtfilt(b, a, waveform, padlen=150)
+        self.workspace.current_workspace[self.maingui.current_id]["Data"]["AVG"]["Waveform"] = waveform
+
 
     def get_label(self,channel,sc):
         return sc + ' ' + channel[len(channel)-1]
@@ -68,7 +76,7 @@ class Signal(object):
     def get_sc_temporal(self):
         print("ffr.py: current_json ",self.maingui.current_json)
         print("ffr.py: current sc   ",self.maingui.current_sc)
-        channel, sc = self.get_channel_sc(self.maingui.current_sc)
+        channel, sc = self.ffrutils.get_channel_sc(self.maingui.current_sc)
         _, noise_waveform = self.ffrutils.load_AVG(sc,channel)
         sig_waveform = self.maingui.current_waveform
         return sig_waveform, noise_waveform

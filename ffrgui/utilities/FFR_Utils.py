@@ -1,12 +1,12 @@
-﻿#from IPython import embed
+import os, sys, json,math
 import numpy as np
 import matplotlib.pyplot as plt
-import json
 from scipy import signal
-import os
-import sys
-import math
 from fnmatch import fnmatch
+from PyQt5.QtWidgets import QMessageBox
+from PyQt5 import  QtGui
+
+
 
 #from pathlib import Path, PureWindowsPath
 
@@ -14,7 +14,8 @@ from fnmatch import fnmatch
 class FFR_Utils():
     name = "FFR_Utils"
 
-    def __init__(self):
+    def __init__(self,maingui):
+        self.maingui = maingui
         self.home_dir  = ''
         self.path      = ''
         self.fs        = 24414.0
@@ -29,11 +30,18 @@ class FFR_Utils():
         self.initwaveforms = {'Channel-V':{'EFR':[],'EFR**':[],'EFR***':[],'CDT':[],'CDT*':[],'F1':[],'F2':[],'ABR':[],'Noise':[]},\
                      'Channel-H':{'EFR':[],'EFR**':[],'EFR***':[],'CDT':[],'CDT*':[],'F1':[],'F2':[],'ABR':[],'Noise':[]} }
 
-        _temppath      = os.path.dirname(os.getcwd())
-        print("FFR.py",_temppath)
-        self.path_database = os.path.join(_temppath,"Python","data","real","control")
-        self.path_conf = os.path.join("conf","display.json")
 
+        dbconfpathfile      = os.path.join(self.maingui.CONFDIR,'databasepath.json')
+        if os.path.exists(dbconfpathfile):
+            pass
+        else :
+            self.select_db_path()
+        with open(dbconfpathfile) as data_file:
+            data = json.load(data_file)
+            self.path_database = data['databasepath']
+
+
+        self.path_conf     = os.path.join(self.maingui.CONFDIR,"display.json")
         with open(self.path_conf) as data_file:
             display = json.load(data_file)
 
@@ -54,6 +62,24 @@ class FFR_Utils():
 
 
         print("FFR class initialized")
+
+
+
+    def select_db_path(self):
+        # startingDir = cmds.workspace(q=True, rootDirectory=True)
+        destDir = QtGui.QFileDialog.getExistingDirectory(None,
+                                                         'Open working directory',
+                                                         ".",
+                                                         QtGui.QFileDialog.ShowDirsOnly)
+        out = {'databasepath':destDir}
+
+        def popup_button(i):	self.button_text = i.text()
+        msg = QMessageBox()
+        msg.setWindowTitle("Action required")
+        msg.setText("Save as default database path " + '\n' + destDir)
+        msg.setStandardButtons( QMessageBox.Save ) # seperate buttons with "|"
+        msg.exec_()
+        with open(os.path.join(self.maingui.CONFDIR,'databasepath.json'), 'w') as outfile: json.dump(out, outfile)
 
 
     def load_path(self,path):
@@ -120,7 +146,11 @@ class FFR_Utils():
         return waveforms, sc_list
 
 
-
+    def get_channel_sc(self,label):
+        channel = 'Channel-' + label[len(label)-1]
+        sc = label[len(label)-3::-1]
+        sc = sc[::-1]
+        return channel, sc
 
 
 
@@ -149,7 +179,7 @@ class FFR_Utils():
         else:
             print('SC string not valid')
 
-        return f
+        return ffsfloat
 
     def generate_stimulus(self):
         f1       = self.get_frequency("F1")
@@ -278,9 +308,8 @@ class FFR_Utils():
         level     = list()
         code      = list()
         path2json = list()
-        root      = self.path_database
         pattern = "*.json"
-        for subpath, subdirs, files in os.walk(root):
+        for subpath, subdirs, files in os.walk(self.path_database):
             # print("ffr.py path = ",path)
             for filename in files:
                 if fnmatch(filename, pattern):

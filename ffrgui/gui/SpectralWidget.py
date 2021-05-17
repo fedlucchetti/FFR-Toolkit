@@ -21,28 +21,51 @@ class SpectralWidget():
         self.maingui = maingui
         self.sig = maingui.sig
         self.ffrutils = maingui.ffrutils
+        self.workspace = maingui.workspace
         # self.win = pg.GraphicsLayoutWidget(show=False, title="FFR Spectral Analysis")
         # self.win.resize(1000,600)
 
-        self.filter_list={-1:{"type":None,"state":None}}
         #
         # self.initUI()
 
     def __addItem(self,item):
         self.spectral.addItem(item)
 
-    def initUI(self):
+    def initUI(self,arg=None):
         try:
-            if win:self.win.clear()
+            if self.win:self.win.clear()
         except: pass
         self.win = pg.GraphicsLayoutWidget(show=True, title="FFR Spectral Analysis")
         self.win.resize(1000,600)
         self.spectral = self.win.addPlot(title=self.maingui.current_sc)
-        if self.maingui.current_json != None:
-            self.add_spectrum()
+
         self.spectral.setXRange(0,4000)
         self.__add_clickable_background()
+        self.update_plot()
+        if arg=='load':
+            if -1 not in self.workspace.current_workspace[self.maingui.current_id]["Filters"]:
+                self.__load_roi_from_workspace()
         # self.win.show()
+
+    def update_plot(self):
+        if self.maingui.current_json != None:
+            try:
+                self.spectral.removeItem(self.signal_spectra)
+                self.spectral.removeItem(self.noise_spectra)
+            except:pass
+            sig_waveform, noise_waveform      = self.sig.get_sc_spectral()
+            self.sig_waveform,signal_f        = self.ffrutils.smooth_plot(self.ffrutils.f,sig_waveform,window=91)
+            self.noise_waveform,noise_f       = self.ffrutils.smooth_plot(self.ffrutils.f,noise_waveform,window=91)
+
+            self.signal_spectra = pg.PlotDataItem(signal_f,self.sig_waveform,pen=pg.mkPen('r', width=2))
+            self.spectral.setLimits(xMin=0,yMin=0,yMax=self.sig_waveform.max())
+
+
+            self.__addItem(self.signal_spectra)
+            self.noise_spectra = pg.PlotDataItem(noise_f,self.noise_waveform,fillLevel=0,brush=(255,0,0,80),fillOutline=False, width=0)
+            self.__addItem(self.noise_spectra)
+            # self.add_filter()
+            self.__add_clickable_background()
 
     def __add_clickable_background(self):
         roi = pg.RectROI(pos=[0,0], size=[self.ffrutils.fs/2, 10e12],centered=True, \
@@ -55,23 +78,51 @@ class SpectralWidget():
     def test_print(self):
         print("yes")
 
-    def add_spectrum(self):
-        sig_waveform, noise_waveform      = self.sig.get_sc_spectral()
-        self.sig_waveform,signal_f        = self.ffrutils.smooth_plot(self.ffrutils.f,sig_waveform,window=91)
-        self.noise_waveform,noise_f       = self.ffrutils.smooth_plot(self.ffrutils.f,noise_waveform,window=91)
-
-        signal_spectra = pg.PlotDataItem(signal_f,self.sig_waveform,pen=pg.mkPen('r', width=2))
-        self.spectral.setLimits(xMin=0,yMin=0,yMax=self.sig_waveform.max())
-
-
-        self.__addItem(signal_spectra)
-        noise_spectra = pg.PlotDataItem(noise_f,self.noise_waveform,fillLevel=0,brush=(255,0,0,80),fillOutline=False, width=0)
-        self.__addItem(noise_spectra)
-        # self.add_filter()
-        self.__add_clickable_background()
-
     def __clear_plot(self):
         pass
+
+    def __construct_roi_filter(self,roi=None):
+        if roi==None:
+            _filter = pg.RectROI(pos=[np.random.randint(0,4000),0], size=[500, self.sig_waveform.max()],centered=True, \
+                       movable=True, resizable=True, removable=True, maxBounds=QRectF(0,0,int(self.ffrutils.fs/2),self.sig_waveform.max()) ,\
+                       pen=pg.mkPen((255, 0, 0,100), width=4),hoverPen=pg.mkPen((255, 0, 0,100), width=4),handlePen=pg.mkPen((255, 0, 0,100), width=4))
+            type='stop'
+        else:
+            type=roi['type']
+            if   type=='stop': color=pg.mkPen((255, 0, 0,100), width=4)
+            elif type=='pass': color=pg.mkPen((0, 255, 0,100), width=4)
+            _filter = pg.RectROI(pos=roi['state']['pos'], size=roi['state']['size'],centered=True, \
+                       movable=True, resizable=True, removable=True, maxBounds=QRectF(0,0,int(self.ffrutils.fs/2),self.sig_waveform.max()) ,\
+                       pen=color,hoverPen=color,handlePen=color)
+
+        _filter.addScaleHandle(pos=[0,0.5],center=[0.5,0.5])
+        _filter.addScaleHandle(pos=[1,0.5],center=[0.5,0.5])
+        _filter.setAcceptedMouseButtons(QtCore.Qt.LeftButton)
+        _filter.sigClicked.connect(self.__switch_filter_type)
+
+        _filter.sigRegionChangeFinished.connect(self.__update_roi_filter)
+        _filter.sigRegionChanged.connect(self.__update_roi_filter)
+        _filter.sigRegionChanged.connect(self.__apply_filter)
+        # _filter.sigRemoveRequested.removeTimer.stop()
+        _filter.sigRemoveRequested.connect(self.__remove_roi_filter)
+        # _filter.saveState()
+        self.__addItem(_filter)
+        return _filter, type
+
+    def __apply_filter(self):
+        self.sig.filter_current_waveform()
+        self.update_plot()
+        self.maingui.update_temporal_plot()
+
+    def __add_filter(self):
+        roi, type = self.__construct_roi_filter()
+        new = {roi:{'state':roi.saveState(),'type':type}}
+        self.workspace.current_workspace[self.maingui.current_id]["Filters"].update(new)
+        print("_add filter: number of filters",self.__count_filters())
+        print("_add filter: adding filter: ",new)
+        self.__list_all()
+        if -1 in self.workspace.current_workspace[self.maingui.current_id]["Filters"]:
+            del self.workspace.current_workspace[self.maingui.current_id]["Filters"][-1]
 
     def __switch_filter_type(self,roi):
         color = roi.pen.color().getRgb()
@@ -80,44 +131,36 @@ class SpectralWidget():
             roi.hoverPen  = pg.mkPen((0, 255, 0,100), width=4)
             roi.handlePen = pg.mkPen((0, 255, 0,100), width=4)
             print("set to bandpass")
+            type='pass'
         elif color[1]==255:
             roi.pen       = pg.mkPen((255, 0, 0,100), width=4)
             roi.hoverPen  = pg.mkPen((255, 0, 0,100), width=4)
             roi.handlePen = pg.mkPen((255, 0, 0,100), width=4)
             print("set to bandstop")
-        self.filter_list.update({roi:roi})
+            type='stop'
+        self.__update_roi_filter(roi,type)
 
-    def __update_roi_filter(self,roi):
-        self.filter_list.update({roi:roi})
+    def __update_roi_filter(self,roi,type='stop'):
+        new = {roi:{'state':roi.saveState(),'type':type}}
+        self.workspace.current_workspace[self.maingui.current_id]["Filters"].update(new)
+
+    def __list_all(self):
+        rois=self.workspace.current_workspace[self.maingui.current_id]["Filters"]
+        for id in rois:
+            print(rois[id])
+
+    def __count_filters(self):
+        return len(self.workspace.current_workspace[self.maingui.current_id]["Filters"])
 
     def __remove_roi_filter(self,roi):
-        roi.deleteLater()
+        self.spectral.removeItem(roi)
+        del self.workspace.current_workspace[self.maingui.current_id]["Filters"][roi]
 
-    def __construct_roi_filter(self):
-        _filter = pg.RectROI(pos=[np.random.randint(0,4000),0], size=[500, self.sig_waveform.max()],centered=True, \
-                   movable=True, resizable=True, removable=True, maxBounds=QRectF(0,0,int(self.ffrutils.fs/2),self.sig_waveform.max()) ,\
-                   pen=pg.mkPen((255, 0, 0,100), width=4),hoverPen=pg.mkPen((255, 0, 0,50), width=4),handlePen=pg.mkPen((255, 0, 0,100), width=4))
-        _filter.addScaleHandle(pos=[0,0.5],center=[0.5,0.5])
-        _filter.addScaleHandle(pos=[1,0.5],center=[0.5,0.5])
-        _filter.setAcceptedMouseButtons(QtCore.Qt.LeftButton)
-        _filter.sigClicked.connect(self.__switch_filter_type)
-
-        _filter.sigRegionChangeFinished.connect(self.__update_roi_filter)
-        _filter.sigRegionChanged.connect(self.__update_roi_filter)
-
-        _filter.sigRemoveRequested.connect(self.__remove_roi_filter)
-        # _filter.saveState()
-        self.__addItem(_filter)
-
-    def __add_filter(self):
-        _filter = self.__construct_roi_filter()
-        if _filter in self.filter_list:
-            self.filter_list[_filter]=_filter
-        else:
-            self.filter_list.update({_filter:_filter})
-        print("_add filter: number of fitlers",len(self.filter_list))
-        if -1 in self.filter_list:
-            del self.filter_list[-1]
+    def __load_roi_from_workspace(self):
+        rois=self.workspace.current_workspace[self.maingui.current_id]["Filters"]
+        for id in rois:
+            self.__construct_roi_filter(rois[id])
+        # roi.deleteLater()
 
 
 

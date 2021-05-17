@@ -28,6 +28,9 @@ from ffrgui.utilities import Workspace,FFR_Utils
 class Ui_MainWindow(object):
     def __init__(self):
         super().__init__()
+        self.ROOTDIR = os.path.split(os.path.realpath(__file__))[0]
+        self.CONFDIR = os.path.join(self.ROOTDIR,'conf')
+        print("self.ROOTDIR",self.ROOTDIR)
         ##############################
         self.defaultScList = {'Channel-V':{'EFR':[],'CDT':[],'F1':[],'F2':[],'ABR':[]}, \
                               'Channel-H':{'EFR':[],'CDT':[],'F1':[],'F2':[],'ABR':[],} }
@@ -36,12 +39,12 @@ class Ui_MainWindow(object):
         self.current_sc    = 'EFR V'
         self.current_id    = 1
         ##############################
-        self.ffrutils   = FFR_Utils.FFR_Utils()
+        self.ffrutils   = FFR_Utils.FFR_Utils(self)
         self.name,self.number,self.date,self.stim,self.ear,self.level,self.path2json, self.code = self.ffrutils.list_all()
 
         ##############################
-        self.workspace      = Workspace.Workspace(self)
-        self.current_workspace=None
+        self.workspace         = Workspace.Workspace(self)
+        self.current_workspace = None
         ##############################
         self.sig   = Signal.Signal(self)
         ##############################
@@ -225,14 +228,15 @@ class Ui_MainWindow(object):
 
     def actions(self):
         self.ButtonOpenPatientTable.clicked.connect(  lambda : self.table.show()                                     )
-        self.ButtonRefresh.clicked.connect(           lambda : self.update_temporal_Plot()                           )
-        self.table.tableWidget.clicked.connect(       lambda : self.update_temporal_Plot())
+        self.ButtonRefresh.clicked.connect(           lambda : self.update_temporal_plot()                           )
+        self.table.tableWidget.clicked.connect(       lambda : self.update_temporal_plot())
 
 
         self.ButtonLatency.clicked.connect(           lambda: self.update_tf_plot()                                  )
         # self.ButtonLatency.clicked.connect(           lambda : self.update_widget_size(self.ButtonLatency.isChecked()))
 
-        self.ButtonFFT.clicked.connect(               lambda: self.spectralWidget.initUI()                         )
+        self.ButtonFFT.clicked.connect(               lambda: self.spectralWidget.initUI('load')                         )
+        # self.ButtonFFT.clicked.connect(               lambda: self.spectralWidget.update_plot()                         )
         # self.spectralWidget.lr.sigRegionChanged.connect(lambda: self.test_print())
 
 
@@ -260,7 +264,7 @@ class Ui_MainWindow(object):
             self.roisdict[id].setAcceptedMouseButtons(QtCore.Qt.LeftButton)
             self.roisdict[id].sigClicked.connect(self.select_waveform)
             self.roisdict[id].sigClicked.connect(self.update_labels)
-            self.roisdict[id].sigClicked.connect(self.update_temporal_Plot)
+            self.roisdict[id].sigClicked.connect(self.update_temporal_plot)
 
             self.roisdict[id].sigRegionChangeFinished.connect(self.move_waveform)
             self.roisdict[id].sigRegionChanged.connect(self.move_waveform)
@@ -281,7 +285,7 @@ class Ui_MainWindow(object):
         print("select_waveform:  id:sc", id, sc)
         self.current_sc       = sc
         self.current_id       = id
-        self.current_waveform = self.waveforms[:,id]
+        self.current_waveform = self.workspace.get_waveform(id)
         return sc
 
     def __add_clickable_background(self):
@@ -338,7 +342,7 @@ class Ui_MainWindow(object):
         self.PlotTemporalWidget.setLabel('bottom', 'Time [ms]', color='white', size=100)
 
 
-    def update_temporal_Plot(self,arg=None):
+    def update_temporal_plot(self,arg=None):
         # self.ffrutils.load_path(self.current_json)
         # waveforms, _ = self.ffrutils.load_AVGs()
         waveforms, self.sc_list = self.workspace.load_AVGs()

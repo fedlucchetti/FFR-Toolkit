@@ -1,7 +1,8 @@
-import sys
+import sys, os, json
 import numpy as np
-from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QAction, QTableWidget,QTableWidgetItem,QVBoxLayout
+from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QAction, QTableWidget,QTableWidgetItem,QVBoxLayout,QMessageBox
 from PyQt5.QtGui import QIcon
+
 from PyQt5 import  QtGui
 
 from PyQt5.QtCore import pyqtSlot
@@ -67,17 +68,12 @@ class PatientTable(QWidget):
         self.tableWidget.move(0,0)
 
 
-    def select_db_path(self):
-        # startingDir = cmds.workspace(q=True, rootDirectory=True)
-        destDir = QtGui.QFileDialog.getExistingDirectory(None,
-                                                         'Open working directory',
-                                                         ".",
-                                                         QtGui.QFileDialog.ShowDirsOnly)
-        print("select_db_path  ",destDir)
+
+
 
     def createTable(self):
        # Create table
-        # self.select_db_path()
+
         self.Nrows    = len(self.maingui.name)
         self.Ncolumns = 5
         self.tableWidget = QTableWidget()
