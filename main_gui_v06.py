@@ -17,10 +17,9 @@ from pyqtgraph import PlotWidget, GraphicsLayout, GraphicsWindow, GraphicsScene
 from PyQt5.QtCore import QEvent, QRect
 
 ######################
-from ffrgui       import FFR
-from ffrgui.dsp   import Signal
-from ffrgui.gui   import PatientTable,SpectralWidget
-from ffrgui.utils import Workspace
+from ffrgui.dsp       import Signal
+from ffrgui.gui       import PatientTable,SpectralWidget
+from ffrgui.utilities import Workspace,FFR_Utils
 
 
 
@@ -35,15 +34,18 @@ class Ui_MainWindow(object):
         self.initSClist    = ['EFR V','EFR H','F1 V','F1 H','F2 V','F2 H','CDT V','CDT H','ABR V','ABR H',]
         self.current_json  = None
         self.current_sc    = 'EFR V'
+        self.current_id    = 1
         ##############################
-        self.ffrjson   = FFRJSON.FFRJSON()
-        self.name,self.number,self.date,self.stim,self.ear,self.level,self.path2json, self.code = self.ffrjson.list_all()
-        ##############################
-        self.sig   = Signal.Signal(self)
+        self.ffrutils   = FFR_Utils.FFR_Utils()
+        self.name,self.number,self.date,self.stim,self.ear,self.level,self.path2json, self.code = self.ffrutils.list_all()
+
         ##############################
         self.workspace      = Workspace.Workspace(self)
         self.current_workspace=None
         ##############################
+        self.sig   = Signal.Signal(self)
+        ##############################
+
         self.table = PatientTable.PatientTable(self)
         self.tableWidget = self.table.initUI()
         ##############################
@@ -240,10 +242,11 @@ class Ui_MainWindow(object):
 
     def update_rois(self):
         self.roisdict = {'initROI':pg.RectROI([0,1], [1, 1],pen=QPen(QColor(255, 0, 0,0)))}
-        roi_width = np.max(self.ffrjson.t*1000)
-        for sc in self.waveforms.keys():
-            roi_y_pos  = np.min(self.waveforms[sc])
-            roi_height = np.abs(np.max(self.waveforms[sc])-np.min(self.waveforms[sc]))
+        roi_width = np.max(self.ffrutils.t*1000)
+        # for id,sc in self.waveforms.keys():
+        for id, sc in enumerate(self.sc_list):
+            roi_y_pos  = np.min(self.waveforms[:,id])
+            roi_height = np.abs(np.max(self.waveforms[:,id])-np.min(self.waveforms[:,id]))
             _rectroi   = pg.RectROI(pos=[0,roi_y_pos], size=[roi_width, roi_height], \
                        movable=True, resizable=False, removable=True, \
                        maxBounds=QRectF(0,20*roi_y_pos,roi_width,20*roi_height) ,\
@@ -251,16 +254,16 @@ class Ui_MainWindow(object):
                        hoverPen=pg.mkPen((255, 0, 0,0), width=0),\
                        handlePen=pg.mkPen((255, 0, 0,0), width=0))
 
-            _roi       = {sc:_rectroi}
+            _roi       = {id:_rectroi}
             self.roisdict.update(_roi)
-            self.PlotTemporalWidget.addItem(self.roisdict[sc])
-            self.roisdict[sc].setAcceptedMouseButtons(QtCore.Qt.LeftButton)
-            self.roisdict[sc].sigClicked.connect(self.select_waveform)
-            self.roisdict[sc].sigClicked.connect(self.update_labels)
-            self.roisdict[sc].sigClicked.connect(self.update_temporal_Plot)
+            self.PlotTemporalWidget.addItem(self.roisdict[id])
+            self.roisdict[id].setAcceptedMouseButtons(QtCore.Qt.LeftButton)
+            self.roisdict[id].sigClicked.connect(self.select_waveform)
+            self.roisdict[id].sigClicked.connect(self.update_labels)
+            self.roisdict[id].sigClicked.connect(self.update_temporal_Plot)
 
-            self.roisdict[sc].sigRegionChangeFinished.connect(self.move_waveform)
-            self.roisdict[sc].sigRegionChanged.connect(self.move_waveform)
+            self.roisdict[id].sigRegionChangeFinished.connect(self.move_waveform)
+            self.roisdict[id].sigRegionChanged.connect(self.move_waveform)
         del self.roisdict['initROI']
 
     def move_waveform(self,roi):
@@ -271,18 +274,18 @@ class Ui_MainWindow(object):
         x,y = roi.pos()
         w,h = roi.size()
         y   = y + 0.5*h
-        for sc in self.waveforms.keys():
-            if y<=np.max(self.waveforms[sc]) and y>=np.min(self.waveforms[sc]):
+        for id, sc in enumerate(self.sc_list):
+            if y<=np.max(self.waveforms[:,id]) and y>=np.min(self.waveforms[:,id]):
                 break
             else: pass
-        print(sc)
+        print("select_waveform:  id:sc", id, sc)
         self.current_sc       = sc
-        self.current_waveform = self.waveforms[sc]
-        self.current_waveform = self.current_waveform
+        self.current_id       = id
+        self.current_waveform = self.waveforms[:,id]
         return sc
 
     def __add_clickable_background(self):
-        roi = pg.RectROI(pos=[0,0], size=[max(self.ffrjson.t)*1000, 20],centered=True, \
+        roi = pg.RectROI(pos=[0,0], size=[max(self.ffrutils.t)*1000, 20],centered=True, \
                    movable=False, resizable=False, removable=True ,\
                    pen=pg.mkPen((255, 0, 0,0)),hoverPen=pg.mkPen((0, 255, 0,0)),handlePen=pg.mkPen((0, 255, 0,0)))
         roi.setAcceptedMouseButtons(QtCore.Qt.LeftButton)
@@ -292,11 +295,11 @@ class Ui_MainWindow(object):
 
     def __add_cursor(self):
         print("Add Cursor")
-        xpos=np.random.randint(0,max(self.ffrjson.t)*1000)
+        xpos=np.random.randint(0,max(self.ffrutils.t)*1000)
         cursor = pg.InfiniteLine(pos=xpos,pen=pg.mkPen('r', width=2),\
                                 markers = '<|>',label=str(xpos) )
         cursor.setMovable(True)
-        cursor.setBounds([0,max(self.ffrjson.t)*1000])
+        cursor.setBounds([0,max(self.ffrutils.t)*1000])
         cursor.label.setMovable(True)
         cursor.label.setMovable(True)
         cursor.label.setY(0)
@@ -316,51 +319,54 @@ class Ui_MainWindow(object):
     def update_tf_plot(self):
         print('latency clicked')
         self.PlotTemporalWidget.clear()
-        self.plotitem     = pg.PlotDataItem(self.ffrjson.t*1000,self.current_waveform/np.max(self.current_waveform),pen=pg.mkPen('g', width=1))
-        self.PlotTemporalWidget.addItem(self.plotitem)
+        plotitem     = pg.PlotDataItem(self.ffrutils.t*1000,self.current_waveform/np.max(self.current_waveform),pen=pg.mkPen('g', width=1))
+        self.PlotTemporalWidget.addItem(plotitem)
 
         analytic_signal   = signal.hilbert(self.current_waveform)
         self.IAmplitude   = np.abs(analytic_signal)
         self.IAmplitude   = self.IAmplitude/np.max(self.IAmplitude)-2
-        self.plotitem     = pg.PlotDataItem(self.ffrjson.t*1000,self.IAmplitude,pen=pg.mkPen('r', width=1))
-        self.PlotTemporalWidget.addItem(self.plotitem)
+        plotitem     = pg.PlotDataItem(self.ffrutils.t*1000,self.IAmplitude,pen=pg.mkPen('r', width=1))
+        self.PlotTemporalWidget.addItem(plotitem)
 
         self.IPhase       = np.unwrap(np.angle(analytic_signal))
-        self.DeltaPhase   = np.abs(self.IPhase - 2*np.pi*self.ffrjson.get_frequency(self.current_sc)*self.ffrjson.t)
+        self.DeltaPhase   = np.abs(self.IPhase - 2*np.pi*self.ffrutils.get_frequency(self.current_sc)*self.ffrutils.t)
         self.DeltaPhase   = self.DeltaPhase/np.max(self.DeltaPhase)-4
-        self.plotitem     = pg.PlotDataItem(self.ffrjson.t*1000,self.DeltaPhase ,pen=pg.mkPen('b', width=1))
-        self.PlotTemporalWidget.addItem(self.plotitem)
+        plotitem     = pg.PlotDataItem(self.ffrutils.t*1000,self.DeltaPhase ,pen=pg.mkPen('b', width=1))
+        self.PlotTemporalWidget.addItem(plotitem)
 
 
         self.PlotTemporalWidget.setLabel('bottom', 'Time [ms]', color='white', size=100)
 
 
     def update_temporal_Plot(self,arg=None):
-        self.ffrjson.load_path(self.current_json)
-        waveforms, sc_list = self.ffrjson.load_AVGs()
-        sc_list   = self.initSClist
+        # self.ffrutils.load_path(self.current_json)
+        # waveforms, _ = self.ffrutils.load_AVGs()
+        waveforms, self.sc_list = self.workspace.load_AVGs()
 
         self.PlotTemporalWidget.clear()
         waveforms, scale_factor = self.sig.normalize_waveforms(waveforms)
-        waveforms               = self.sig.order_waveforms(waveforms,sc_list)
-        self.waveforms, DC      = self.sig.offset_waveforms(waveforms)
+        # waveforms               = self.sig.order_waveforms(waveforms,self.initSClist)
+        self.waveforms       = self.sig.offset_waveforms(waveforms)
 
 
-        self.plotitem     = list()
-        for sc in sc_list:
+        for id, sc in enumerate(self.sc_list):
             if sc=="Stimulus":c='g'
             elif sc[0]=="R ": c='r'
             elif sc[0]=="C ": c='b'
-            elif self.current_sc!=None and self.current_sc==sc: c = 'g'
+            elif self.current_sc!=None and self.current_id==id: c = 'g'
             else: c='w'
-            self.plotitem     = pg.PlotDataItem(self.ffrjson.t*1000,self.waveforms[sc],pen=pg.mkPen(c, width=1))
-            self.PlotTemporalWidget.addItem(self.plotitem)
+            plotitem     = pg.PlotDataItem(self.ffrutils.t*1000,self.waveforms[:,id],pen=pg.mkPen(c, width=1))
+            self.PlotTemporalWidget.addItem(plotitem)
+            label = pg.TextItem(sc, color="r", anchor=(0, 0))
+            label.setPos(np.amax(self.ffrutils.t*1000),self.waveforms[:,id].mean() )
+            # label.setTextWidth(10)
+            self.PlotTemporalWidget.addItem(label)
 
 
-        self.PlotTemporalWidget.setLimits(xMin=0,yMin=self.waveforms[sc].min(),yMax=2,xMax=1.1*self.ffrjson.t.max()*1000)
+        self.PlotTemporalWidget.setLimits(xMin=0,yMin=self.waveforms[:,id].min(),yMax=2,xMax=1.1*self.ffrutils.t.max()*1000)
         self.PlotTemporalWidget.setLabel('bottom', 'Time [ms]', color='white', size=200)
-        self.PlotTemporalWidget.setXRange(0, 1.1*self.ffrjson.t.max()*1000, padding=0)
-        self.PlotTemporalWidget.setYRange(self.waveforms[sc].min(), 2, padding=0)
+        self.PlotTemporalWidget.setXRange(0, 1.1*self.ffrutils.t.max()*1000, padding=0)
+        self.PlotTemporalWidget.setYRange(self.waveforms[:,id].min(), 2, padding=0)
         self.update_rois()
         self.__add_clickable_background()
 

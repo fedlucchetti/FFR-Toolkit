@@ -23,7 +23,7 @@ from PyQt5.QtCore import QEvent, QRect
 
 
 ######################
-from ffrgui.utilities import FFRJSON
+from ffrgui.utilities import FFRJSONJSON
 from ffrgui import PatientTable
 from ffrgui import Combo_Select_Patient as combo_patient
 from ffrgui import Signal

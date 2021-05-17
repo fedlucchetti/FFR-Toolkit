@@ -1,4 +1,4 @@
-from bin import FFR
+from bin import FFRJSON
 import json, csv, sys
 import numpy as np
 import matplotlib.pyplot as plt

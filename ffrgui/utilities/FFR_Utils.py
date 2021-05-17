@@ -11,8 +11,8 @@ from fnmatch import fnmatch
 #from pathlib import Path, PureWindowsPath
 
 
-class FFRJSON():
-    name = "FFRJSON"
+class FFR_Utils():
+    name = "FFR_Utils"
 
     def __init__(self):
         self.home_dir  = ''
@@ -31,7 +31,7 @@ class FFRJSON():
 
         _temppath      = os.path.dirname(os.getcwd())
         print("FFR.py",_temppath)
-        self.path_database = os.path.join(_temppath,"Python","bin","NeuralNet","data")
+        self.path_database = os.path.join(_temppath,"Python","data","real","control")
         self.path_conf = os.path.join("conf","display.json")
 
         with open(self.path_conf) as data_file:
@@ -87,7 +87,7 @@ class FFRJSON():
         dir_file = os.path.split(path)
         self.home_dir = dir_file[0]
 
-    def load_metadata(self):
+    def get_metadata(self):
         with open(self.path) as data_file:
             data = json.load(data_file)
         return data["MetaData"]
@@ -119,21 +119,13 @@ class FFRJSON():
                 sc_list.append(sc_string+" "+channel[-1])
         return waveforms, sc_list
 
-    def get_meta_data(self):
-        frequency = str(round(int(data["MetaData"]["Stimulus"]["F2"])-int(data["MetaData"]["Stimulus"]["F1"])))
-        stim      = 'EFR' + frequency
-        number    = data["MetaData"]["Patient"]["Number"]
-        name      = data["MetaData"]["Patient"]["Nom"] + " " + data["MetaData"]["Patient"]["Prenom"]
-        try:
-            ear    = data["MetaData"]["Patient"]["Oreille"]
-        except:
-            ear    = data["MetaData"]["Patient"]["Oreille "]
-        level  =  data["MetaData"]["Stimulus"]["Level[dB]"]
-        return name,number,stim,ear,level
+
+
+
 
 
     def get_frequency(self,SCstring):
-        metadata = self.load_metadata()
+        metadata = self.get_metadata()
         f1       = float(metadata["Stimulus"]["F1"])
         f2       = float(metadata["Stimulus"]["F2"])
 
@@ -253,7 +245,7 @@ class FFRJSON():
         return spectra
 
     def generate_header(self):
-        metadata = self.load_metadata()
+        metadata = self.get_metadata()
         title = 'Patient: ' + metadata["Patient"]["Number"] + '\n Stim: ' + str(metadata["Stimulus"]["Level[dB]"])
         title = title + ' dB SPL' + ' --- $f_1$= ' + str(metadata["Stimulus"]["F1"])
         title = title + 'Hz & $f_2$= ' + str(metadata["Stimulus"]["F2"])+'Hz'
@@ -301,7 +293,7 @@ class FFRJSON():
                        or data["MetaData"]["Patient"]["Prenom"]     != None \
                        or data["MetaData"]["Patient"]["Number"]     != None \
                        or data["MetaData"]["date string"]           != None \
-                       or data["MetaData"]["Patient"]["Oreille "]    != None \
+                       or data["MetaData"]["Patient"]["Oreille"]    != None \
                        or data["MetaData"]["Stimulus"]["Level[dB]"] != None :
                         year      = data["MetaData"]["date string"]
                         year      = year[len(year)-2:len(year)]
@@ -311,11 +303,11 @@ class FFRJSON():
                         number.append(year + data["MetaData"]["Patient"]["Number"])
                         date.append(data["MetaData"]["date string"])
                         stim.append('EFR' + frequency)
-                        ear.append(data["MetaData"]["Patient"]["Oreille "])
+                        ear.append(data["MetaData"]["Patient"]["Oreille"])
                         level.append(str(data["MetaData"]["Stimulus"]["Level[dB]"]))
                         code.append(''.join([data["MetaData"]["Patient"]["Nom"]  , ' ' , data["MetaData"]["Patient"]["Prenom"] ,\
                                             year + data["MetaData"]["Patient"]["Number"]                                       ,\
-                                            data["MetaData"]["Patient"]["Oreille "]                                             ,\
+                                            data["MetaData"]["Patient"]["Oreille"]                                             ,\
                                             str(data["MetaData"]["Stimulus"]["Level[dB]"])                                     ,\
                                             'EFR' , frequency                                                                   ]))
 
@@ -326,7 +318,7 @@ class FFRJSON():
 
 
     def plot_spectra(self,scale=1):
-        SC           = self.load_AVGs()
+        SC,_           = self.load_AVGs()
         Noise_V      = SC["Channel-V"]["Noise"]
         Noise_H      = SC["Channel-H"]["Noise"]
         #♀SC           = self.order_SCs(SC)

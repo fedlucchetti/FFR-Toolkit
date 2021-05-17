@@ -4,7 +4,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets, Qt
 from PyQt5.QtWidgets import (QApplication, QLabel, QWidget)
 from PyQt5.QtGui import QColor, QPen, QMouseEvent
 from PyQt5.QtCore import QEvent
-from ffrgui.utilities import FFRJSON
+from ffrgui.utilities import FFRJSONJSON
 import numpy as np
 from scipy import signal
 

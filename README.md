@@ -13,7 +13,7 @@ Frequency-Following Response toolkit containing various DAQ, online/offline anal
 
 # Class usage
 
-> from ffrgui.utilities import FFRJSON
+> from ffrgui.utilities import FFRJSONJSON
 > ffr = FFRJSON.FFRJSON()
 
 ## Load path to FFR

@@ -20,7 +20,7 @@ class SpectralWidget():
         super().__init__()
         self.maingui = maingui
         self.sig = maingui.sig
-        self.ffrjson = maingui.ffr
+        self.ffrutils = maingui.ffrutils
         # self.win = pg.GraphicsLayoutWidget(show=False, title="FFR Spectral Analysis")
         # self.win.resize(1000,600)
 
@@ -45,7 +45,7 @@ class SpectralWidget():
         # self.win.show()
 
     def __add_clickable_background(self):
-        roi = pg.RectROI(pos=[0,0], size=[self.ffrjson.fs/2, 10e12],centered=True, \
+        roi = pg.RectROI(pos=[0,0], size=[self.ffrutils.fs/2, 10e12],centered=True, \
                    movable=False, resizable=False, removable=True ,\
                    pen=pg.mkPen((255, 0, 0,0)),hoverPen=pg.mkPen((0, 255, 0,0)),handlePen=pg.mkPen((0, 255, 0,0)))
         roi.setAcceptedMouseButtons(QtCore.Qt.LeftButton)
@@ -57,8 +57,8 @@ class SpectralWidget():
 
     def add_spectrum(self):
         sig_waveform, noise_waveform      = self.sig.get_sc_spectral()
-        self.sig_waveform,signal_f        = self.ffrjson.smooth_plot(self.ffrjson.f,sig_waveform,window=91)
-        self.noise_waveform,noise_f       = self.ffrjson.smooth_plot(self.ffrjson.f,noise_waveform,window=91)
+        self.sig_waveform,signal_f        = self.ffrutils.smooth_plot(self.ffrutils.f,sig_waveform,window=91)
+        self.noise_waveform,noise_f       = self.ffrutils.smooth_plot(self.ffrutils.f,noise_waveform,window=91)
 
         signal_spectra = pg.PlotDataItem(signal_f,self.sig_waveform,pen=pg.mkPen('r', width=2))
         self.spectral.setLimits(xMin=0,yMin=0,yMax=self.sig_waveform.max())
@@ -95,7 +95,7 @@ class SpectralWidget():
 
     def __construct_roi_filter(self):
         _filter = pg.RectROI(pos=[np.random.randint(0,4000),0], size=[500, self.sig_waveform.max()],centered=True, \
-                   movable=True, resizable=True, removable=True, maxBounds=QRectF(0,0,int(self.ffrjson.fs/2),self.sig_waveform.max()) ,\
+                   movable=True, resizable=True, removable=True, maxBounds=QRectF(0,0,int(self.ffrutils.fs/2),self.sig_waveform.max()) ,\
                    pen=pg.mkPen((255, 0, 0,100), width=4),hoverPen=pg.mkPen((255, 0, 0,50), width=4),handlePen=pg.mkPen((255, 0, 0,100), width=4))
         _filter.addScaleHandle(pos=[0,0.5],center=[0.5,0.5])
         _filter.addScaleHandle(pos=[1,0.5],center=[0.5,0.5])

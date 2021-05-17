@@ -2,6 +2,8 @@ import sys
 import numpy as np
 from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QAction, QTableWidget,QTableWidgetItem,QVBoxLayout
 from PyQt5.QtGui import QIcon
+from PyQt5 import  QtGui
+
 from PyQt5.QtCore import pyqtSlot
 
 
@@ -45,15 +47,15 @@ class PatientTable(QWidget):
     def onHeaderClicked(self, logicalIndex):
         header = self.__header[logicalIndex]
         print("onHeaderClicked: ", header)
-        if header=="Number":
-            # number=np.array(self.maingui.number)
-            idx = np.argsort(np.array(self.maingui.number))
-        self.maingui.number = self.maingui.number[idx]
-        self.maingui.name   = self.maingui.name[idx]
-        self.maingui.ear    = self.maingui.ear[idx]
-        self.maingui.level  = self.maingui.level[idx]
-        self.maingui.stim   = self.maingui.stim[idx]
-        self.upateTable()
+        # if header=="Number":
+        #     idx = np.argsort(np.array(self.maingui.number).astype("int")).astype("int")
+        #     print(idx)
+        # self.maingui.number = self.maingui.number[idx]
+        # self.maingui.name   = self.maingui.name[idx]
+        # self.maingui.ear    = self.maingui.ear[idx]
+        # self.maingui.level  = self.maingui.level[idx]
+        # self.maingui.stim   = self.maingui.stim[idx]
+        self.updateTable()
 
     def updateTable(self):
         for row in range(self.Nrows):
@@ -65,8 +67,17 @@ class PatientTable(QWidget):
         self.tableWidget.move(0,0)
 
 
+    def select_db_path(self):
+        # startingDir = cmds.workspace(q=True, rootDirectory=True)
+        destDir = QtGui.QFileDialog.getExistingDirectory(None,
+                                                         'Open working directory',
+                                                         ".",
+                                                         QtGui.QFileDialog.ShowDirsOnly)
+        print("select_db_path  ",destDir)
+
     def createTable(self):
        # Create table
+        # self.select_db_path()
         self.Nrows    = len(self.maingui.name)
         self.Ncolumns = 5
         self.tableWidget = QTableWidget()
@@ -93,8 +104,6 @@ class PatientTable(QWidget):
     def on_click(self):
         print("\n")
         for currentQTableWidgetItem in self.tableWidget.selectedItems():
-            # print(currentQTableWidgetItem.row(), currentQTableWidgetItem.column(), currentQTableWidgetItem.text())
-            # print(self.path2json[currentQTableWidgetItem.row()])
             self.maingui.current_json = self.maingui.path2json[currentQTableWidgetItem.row()]
             print("table:  ",currentQTableWidgetItem.row())
 

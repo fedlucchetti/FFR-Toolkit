@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from ffrgui.utilities import FFRJSON
+from ffrgui.utilities import FFRJSONJSON
 import numpy as np
 import re
 import  os

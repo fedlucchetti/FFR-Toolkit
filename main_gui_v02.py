@@ -2,7 +2,7 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtGui import QColor, QPen
-from ffrgui.utilities import FFRJSON
+from ffrgui.utilities import FFRJSONJSON
 import numpy as np
 import re
 import  os
