@@ -231,8 +231,8 @@ class Ui_MainWindow(object):
         self.ButtonRefresh.clicked.connect(           lambda : self.update_temporal_plot()                           )
         self.table.tableWidget.clicked.connect(       lambda : self.update_temporal_plot())
 
-
         self.ButtonLatency.clicked.connect(           lambda: self.update_tf_plot()                                  )
+        self.ButtonRefresh.clicked.connect(           lambda: self.update_temporal_plot()                                  )
         # self.ButtonLatency.clicked.connect(           lambda : self.update_widget_size(self.ButtonLatency.isChecked()))
 
         self.ButtonFFT.clicked.connect(               lambda: self.spectralWidget.initUI('load')                         )
@@ -357,7 +357,7 @@ class Ui_MainWindow(object):
             if sc=="Stimulus":c='g'
             elif sc[0]=="R ": c='r'
             elif sc[0]=="C ": c='b'
-            elif self.current_sc!=None and self.current_id==id: c = 'g'
+            elif self.current_sc!=None and self.current_id==id: c = 'r'
             else: c='w'
             plotitem     = pg.PlotDataItem(self.ffrutils.t*1000,self.waveforms[:,id],pen=pg.mkPen(c, width=1))
             self.PlotTemporalWidget.addItem(plotitem)

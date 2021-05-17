@@ -102,7 +102,7 @@ class SpectralWidget():
 
         _filter.sigRegionChangeFinished.connect(self.__update_roi_filter)
         _filter.sigRegionChanged.connect(self.__update_roi_filter)
-        _filter.sigRegionChanged.connect(self.__apply_filter)
+        # _filter.sigRegionChanged.connect(self.__apply_filter)
         # _filter.sigRemoveRequested.removeTimer.stop()
         _filter.sigRemoveRequested.connect(self.__remove_roi_filter)
         # _filter.saveState()
@@ -112,7 +112,7 @@ class SpectralWidget():
     def __apply_filter(self):
         self.sig.filter_current_waveform()
         self.update_plot()
-        self.maingui.update_temporal_plot()
+        # self.maingui.update_temporal_plot()
 
     def __add_filter(self):
         roi, type = self.__construct_roi_filter()
