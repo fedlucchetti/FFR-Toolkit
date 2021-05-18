@@ -10,7 +10,7 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 setup(
-    name = "planthivian",
+    name = "FFR GUI",
     version = "3.0.1",
     author = "Federico Lucchetti",
     author_email = "fedlucchetti@gmail.com",

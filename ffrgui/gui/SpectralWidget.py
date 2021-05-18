@@ -40,32 +40,43 @@ class SpectralWidget():
         self.spectral = self.win.addPlot(title=self.maingui.current_sc)
 
         self.spectral.setXRange(0,4000)
+        self.ymax=[]
         self.__add_clickable_background()
         self.update_plot()
-        if arg=='load':
-            if -1 not in self.workspace.current_workspace[self.maingui.current_id]["Filters"]:
-                self.__load_roi_from_workspace()
+
+        self.__add_clickable_background()
+        try:
+            if arg=='load':
+                if -1 not in self.workspace.current_workspace[self.maingui.current_id]["Filters"]:
+                    self.__load_roi_from_workspace()
+        except:pass
         # self.win.show()
 
     def update_plot(self):
         if self.maingui.current_json != None:
             try:
+                # print("Remove items")
                 self.spectral.removeItem(self.signal_spectra)
                 self.spectral.removeItem(self.noise_spectra)
             except:pass
-            sig_waveform, noise_waveform      = self.sig.get_sc_spectral()
+            if len(self.workspace.get_filters())>0:flag='filtered'
+            else:flag='original'
+            sig_waveform, noise_waveform      = self.workspace.get_sc_spectral(flag)
             self.sig_waveform,signal_f        = self.ffrutils.smooth_plot(self.ffrutils.f,sig_waveform,window=91)
             self.noise_waveform,noise_f       = self.ffrutils.smooth_plot(self.ffrutils.f,noise_waveform,window=91)
 
             self.signal_spectra = pg.PlotDataItem(signal_f,self.sig_waveform,pen=pg.mkPen('r', width=2))
-            self.spectral.setLimits(xMin=0,yMin=0,yMax=self.sig_waveform.max())
 
+            if len(self.ymax)==0:self.ymax.append(self.sig_waveform.max())
+            self.spectral.setLimits(xMin=0,yMin=0,yMax=self.ymax[0])
 
+            print("Update items")
             self.__addItem(self.signal_spectra)
             self.noise_spectra = pg.PlotDataItem(noise_f,self.noise_waveform,fillLevel=0,brush=(255,0,0,80),fillOutline=False, width=0)
             self.__addItem(self.noise_spectra)
+            self.spectral.update()
             # self.add_filter()
-            self.__add_clickable_background()
+
 
     def __add_clickable_background(self):
         roi = pg.RectROI(pos=[0,0], size=[self.ffrutils.fs/2, 10e12],centered=True, \
@@ -102,7 +113,7 @@ class SpectralWidget():
 
         _filter.sigRegionChangeFinished.connect(self.__update_roi_filter)
         _filter.sigRegionChanged.connect(self.__update_roi_filter)
-        # _filter.sigRegionChanged.connect(self.__apply_filter)
+        _filter.sigRegionChangeFinished.connect(self.__apply_filter)
         # _filter.sigRemoveRequested.removeTimer.stop()
         _filter.sigRemoveRequested.connect(self.__remove_roi_filter)
         # _filter.saveState()
@@ -118,9 +129,7 @@ class SpectralWidget():
         roi, type = self.__construct_roi_filter()
         new = {roi:{'state':roi.saveState(),'type':type}}
         self.workspace.current_workspace[self.maingui.current_id]["Filters"].update(new)
-        print("_add filter: number of filters",self.__count_filters())
-        print("_add filter: adding filter: ",new)
-        self.__list_all()
+        # self.__list_all()
         if -1 in self.workspace.current_workspace[self.maingui.current_id]["Filters"]:
             del self.workspace.current_workspace[self.maingui.current_id]["Filters"][-1]
 
@@ -130,13 +139,11 @@ class SpectralWidget():
             roi.pen       = pg.mkPen((0, 255, 0,100), width=4)
             roi.hoverPen  = pg.mkPen((0, 255, 0,100), width=4)
             roi.handlePen = pg.mkPen((0, 255, 0,100), width=4)
-            print("set to bandpass")
             type='pass'
         elif color[1]==255:
             roi.pen       = pg.mkPen((255, 0, 0,100), width=4)
             roi.hoverPen  = pg.mkPen((255, 0, 0,100), width=4)
             roi.handlePen = pg.mkPen((255, 0, 0,100), width=4)
-            print("set to bandstop")
             type='stop'
         self.__update_roi_filter(roi,type)
 
