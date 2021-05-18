@@ -281,7 +281,7 @@ class Ui_MainWindow(object):
     def __add_cursor(self):
         print("Add Cursor")
         xpos=np.random.randint(0,max(self.ffrutils.t)*1000)
-        cursor = pg.InfiniteLine(pos=xpos,pen=pg.mkPen('r', width=2),\
+        cursor = pg.InfiniteLine(pos=xpos,pen=pg.mkPen('y', width=4),\
                                 markers = '<|>',label=str(xpos) )
         cursor.setMovable(True)
         cursor.setBounds([0,max(self.ffrutils.t)*1000])
