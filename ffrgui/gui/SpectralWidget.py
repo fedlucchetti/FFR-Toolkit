@@ -28,8 +28,7 @@ class SpectralWidget():
         #
         # self.initUI()
 
-    def __addItem(self,item):
-        self.spectral.addItem(item)
+
 
     def initUI(self,arg=None):
         try:
@@ -77,6 +76,8 @@ class SpectralWidget():
             self.spectral.update()
             # self.add_filter()
 
+    def __addItem(self,item):
+        self.spectral.addItem(item)
 
     def __add_clickable_background(self):
         roi = pg.RectROI(pos=[0,0], size=[self.ffrutils.fs/2, 10e12],centered=True, \
@@ -85,9 +86,6 @@ class SpectralWidget():
         roi.setAcceptedMouseButtons(QtCore.Qt.LeftButton)
         roi.sigClicked.connect(self.__add_filter)
         self.__addItem(roi)
-
-    def test_print(self):
-        print("yes")
 
     def __clear_plot(self):
         pass
@@ -126,11 +124,13 @@ class SpectralWidget():
 
     def __add_filter(self):
         roi, type = self.__construct_roi_filter()
-        new = {roi:{'state':roi.saveState(),'type':type}}
+        new = {str(roi):{'state':roi.saveState(),'type':type}}
         self.workspace.current_workspace[self.maingui.current_id]["Filters"].update(new)
         # self.__list_all()
-        if -1 in self.workspace.current_workspace[self.maingui.current_id]["Filters"]:
-            del self.workspace.current_workspace[self.maingui.current_id]["Filters"][-1]
+        try:
+            if -1 in self.workspace.current_workspace[self.maingui.current_id]["Filters"]:
+                del self.workspace.current_workspace[self.maingui.current_id]["Filters"][-1]
+        except: pass
 
     def __switch_filter_type(self,roi):
         color = roi.pen.color().getRgb()
@@ -144,13 +144,15 @@ class SpectralWidget():
             roi.hoverPen  = pg.mkPen((255, 0, 0,100), width=4)
             roi.handlePen = pg.mkPen((255, 0, 0,100), width=4)
             type='stop'
-        new = {roi:{'state':roi.saveState(),'type':type}}
+        n = len(self.maingui.workspace.get_filters())
+        new = {str(roi):{'state':roi.saveState(),'type':type}}
         self.workspace.current_workspace[self.maingui.current_id]["Filters"].update(new)
         # self.__update_roi_filter(roi,type)
 
     def __update_roi_filter(self,roi):
         type = self.workspace.current_workspace[self.maingui.current_id]["Filters"][roi]['type']
-        new = {roi:{'state':roi.saveState(),'type':type}}
+
+        new = {str(roi):{'state':roi.saveState(),'type':type}}
         self.workspace.current_workspace[self.maingui.current_id]["Filters"].update(new)
 
     def __list_all(self):

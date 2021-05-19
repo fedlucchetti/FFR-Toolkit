@@ -90,6 +90,7 @@ class Workspace(object):
     def save(self):
         self.filedialog = self.maingui.filedialog
         filename = self.filedialog.saveFileDialog()
+        print(self.current_workspace)
         with open(filename, 'w') as outfile:
             json.dump(self.current_workspace, outfile)
 
@@ -99,4 +100,5 @@ class Workspace(object):
         filename = self.filedialog.openFileNameDialog()
         with open(filename, 'r') as outfile:
             self.current_workspace = json.load(outfile)
+
         self.maingui.update_temporal_plot()
