@@ -209,7 +209,7 @@ class Ui_MainWindow(object):
         self.table.tableWidget.clicked.connect(       lambda : self.update_temporal_plot())
 
         self.ButtonAnalysis.clicked.connect(           lambda: self.update_tf_plot()                                  )
-        self.ButtonRefresh.clicked.connect(           lambda: self.update_temporal_plot()                                  )
+        self.ButtonRefresh.clicked.connect(           lambda: self.workspace.init_workspace()                                  )
         # self.ButtonAnalysis.clicked.connect(           lambda : self.update_widget_size(self.ButtonAnalysis.isChecked()))
 
         self.ButtonFFT.clicked.connect(               lambda: self.spectralWidget.initUI('load')                         )
@@ -226,6 +226,10 @@ class Ui_MainWindow(object):
         self.PatientLabel_9.setText(self.current_sc)
 
     def update_rois(self):
+        try:
+            for item in self.roisdict:
+                self.PlotTemporalWidget.removeItem(item)
+        except:pass
         self.roisdict = {'initROI':pg.RectROI([0,1], [1, 1],pen=QPen(QColor(255, 0, 0,0)))}
         roi_width = np.max(self.ffrutils.t*1000)
         # for id,sc in self.waveforms.keys():
@@ -331,7 +335,12 @@ class Ui_MainWindow(object):
             for item in self.plotitem:
                 self.PlotTemporalWidget.removeItem(item)
         except:pass
+        try:
+            for item in self.labellist:
+                self.PlotTemporalWidget.removeItem(item)
+        except:pass
         self.plotitem = []
+        self.labellist = []
         waveforms, scale_factor = self.sig.normalize_waveforms(waveforms)
         # waveforms               = self.sig.order_waveforms(waveforms,self.initSClist)
         self.waveforms       = self.sig.offset_waveforms(waveforms)
@@ -347,8 +356,9 @@ class Ui_MainWindow(object):
             self.PlotTemporalWidget.addItem(self.plotitem[id])
             label = pg.TextItem(sc, color="r", anchor=(0, 0))
             label.setPos(np.amax(self.ffrutils.t*1000),self.waveforms[:,id].mean() )
+            self.labellist.append(label)
             # label.setTextWidth(10)
-            self.PlotTemporalWidget.addItem(label)
+            self.PlotTemporalWidget.addItem(self.labellist[id])
 
 
         self.PlotTemporalWidget.setLimits(xMin=0,yMin=self.waveforms[:,-1].min(),yMax=2,xMax=1.1*self.ffrutils.t.max()*1000)

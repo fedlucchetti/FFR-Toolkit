@@ -110,20 +110,19 @@ class SpectralWidget():
         _filter.addScaleHandle(pos=[1,0.5],center=[0.5,0.5])
         _filter.setAcceptedMouseButtons(QtCore.Qt.LeftButton)
         _filter.sigClicked.connect(self.__switch_filter_type)
+        _filter.sigClicked.connect(self.__apply_filter)
 
-        _filter.sigRegionChangeFinished.connect(self.__update_roi_filter)
         _filter.sigRegionChanged.connect(self.__update_roi_filter)
-        _filter.sigRegionChangeFinished.connect(self.__apply_filter)
-        # _filter.sigRemoveRequested.removeTimer.stop()
+        _filter.sigRegionChanged.connect(self.__apply_filter)
         _filter.sigRemoveRequested.connect(self.__remove_roi_filter)
-        # _filter.saveState()
         self.__addItem(_filter)
         return _filter, type
 
     def __apply_filter(self):
         self.sig.filter_current_waveform()
         self.update_plot()
-        # self.maingui.update_temporal_plot()
+        self.__list_all()
+        self.maingui.update_temporal_plot()
 
     def __add_filter(self):
         roi, type = self.__construct_roi_filter()
@@ -145,9 +144,12 @@ class SpectralWidget():
             roi.hoverPen  = pg.mkPen((255, 0, 0,100), width=4)
             roi.handlePen = pg.mkPen((255, 0, 0,100), width=4)
             type='stop'
-        self.__update_roi_filter(roi,type)
+        new = {roi:{'state':roi.saveState(),'type':type}}
+        self.workspace.current_workspace[self.maingui.current_id]["Filters"].update(new)
+        # self.__update_roi_filter(roi,type)
 
-    def __update_roi_filter(self,roi,type='stop'):
+    def __update_roi_filter(self,roi):
+        type = self.workspace.current_workspace[self.maingui.current_id]["Filters"][roi]['type']
         new = {roi:{'state':roi.saveState(),'type':type}}
         self.workspace.current_workspace[self.maingui.current_id]["Filters"].update(new)
 

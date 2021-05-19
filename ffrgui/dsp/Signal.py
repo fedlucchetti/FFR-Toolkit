@@ -34,7 +34,8 @@ class Signal(object):
                 if filters[id]['type']=='pass':type='bandpass'
                 elif filters[id]['type']=='stop':type='bandstop'
                 fmin     = filters[id]['state']['pos'][0]
-                fmax     = fmin+filters[id]['state']['pos'][0]
+                fmax     = fmin+filters[id]['state']['size'][0]
+                print("fmin ",fmin,"   fmax ",fmax)
                 b, a     = signal.butter(4, [fmin,fmax], type,fs=self.ffrutils.fs)
                 waveform = signal.filtfilt(b, a, waveform, padlen=150)
             except:continue

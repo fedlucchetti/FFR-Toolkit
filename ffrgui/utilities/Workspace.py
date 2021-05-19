@@ -1,6 +1,6 @@
 
 # -*- coding: utf-8 -*-
-import sys, json
+import sys, json, copy
 import numpy as np
 from scipy import signal
 from PyQt5.QtWidgets import  QFileDialog
@@ -29,12 +29,13 @@ class Workspace(object):
             # print("id ",i," ch:",ch,"  sc",sc)
             newentry = {i:{"MetaData":metadata,
                         "SC":label,
-                        "Data":{'original':json_data["FFR"][ch][sc],
-                                "filtered":json_data["FFR"][ch][sc],
+                        "Data":{'original':copy.deepcopy(json_data["FFR"][ch][sc]),
+                                "filtered":copy.deepcopy(json_data["FFR"][ch][sc]),
                                 "noise"   :json_data["FFR"][ch]['Noise']},
                         "Filters":{-1:None}}
                         }
             self.current_workspace.update(newentry)
+        self.maingui.update_temporal_plot()
         # self.save()
 
     def get_waveform(self,id,flag='original'):
@@ -70,7 +71,7 @@ class Workspace(object):
         for id, entry in enumerate(self.current_workspace):
             label             = self.current_workspace[entry]["SC"]
             channel,sc_string = self.ffrutils.get_channel_sc(label)
-            waveforms[:,id],_   = self.get_waveform(entry)
+            waveforms[:,id],_   = self.get_waveform(entry,flag='filtered')
             sc_list.append(sc_string+" "+channel[-1])
         return waveforms, sc_list
 
