@@ -40,10 +40,10 @@ class SpectralWidget():
 
         self.spectral.setXRange(0,4000)
         self.ymax=[]
-        self.__add_clickable_background()
         self.update_plot()
+        self.roifilters=[]
 
-        self.__add_clickable_background()
+
         try:
             if arg=='load':
                 if -1 not in self.workspace.current_workspace[self.maingui.current_id]["Filters"]:
@@ -54,12 +54,23 @@ class SpectralWidget():
     def update_plot(self):
         if self.maingui.current_json != None:
             try:
-                # print("Remove items")
                 self.spectral.removeItem(self.signal_spectra)
                 self.spectral.removeItem(self.noise_spectra)
             except:pass
+            try:
+                self.spectral.removeItem(self.self.backgroundroi)
+            except:pass
+            # try:
+            #     for item in self.roifilters:
+            #         self.spectral.removeItem(item)
+            # except:pass
+            # try:
+            #     self.__load_roi_from_workspace()
+            # except:pass
+
             if len(self.workspace.get_filters())>0:flag='filtered'
             else:flag='original'
+            self.__add_clickable_background()
             sig_waveform, noise_waveform      = self.workspace.get_sc_spectral(flag)
             self.sig_waveform,signal_f        = self.ffrutils.smooth_plot(self.ffrutils.f,sig_waveform,window=91)
             self.noise_waveform,noise_f       = self.ffrutils.smooth_plot(self.ffrutils.f,noise_waveform,window=91)
@@ -80,41 +91,45 @@ class SpectralWidget():
         self.spectral.addItem(item)
 
     def __add_clickable_background(self):
-        roi = pg.RectROI(pos=[0,0], size=[self.ffrutils.fs/2, 10e12],centered=True, \
+        self.backgroundroi = pg.RectROI(pos=[0,0], size=[self.ffrutils.fs/2, 10e12],centered=True, \
                    movable=False, resizable=False, removable=True ,\
                    pen=pg.mkPen((255, 0, 0,0)),hoverPen=pg.mkPen((0, 255, 0,0)),handlePen=pg.mkPen((0, 255, 0,0)))
-        roi.setAcceptedMouseButtons(QtCore.Qt.LeftButton)
-        roi.sigClicked.connect(self.__add_filter)
-        self.__addItem(roi)
+        self.backgroundroi.setAcceptedMouseButtons(QtCore.Qt.LeftButton)
+        self.backgroundroi.sigClicked.connect(self.__add_filter)
+        self.spectral.addItem(self.backgroundroi)
+        # self.__addItem(roi)
 
     def __clear_plot(self):
         pass
 
-    def __construct_roi_filter(self,roi=None):
-        if roi==None:
-            _filter = pg.RectROI(pos=[np.random.randint(0,4000),0], size=[500, self.sig_waveform.max()],centered=True, \
-                       movable=True, resizable=True, removable=True, maxBounds=QRectF(0,0,int(self.ffrutils.fs/2),self.sig_waveform.max()) ,\
-                       pen=pg.mkPen((255, 0, 0,100), width=4),hoverPen=pg.mkPen((255, 0, 0,100), width=4),handlePen=pg.mkPen((255, 0, 0,100), width=4))
+    def __construct_roi_filter(self,roidict=None):
+        hovercolor = pg.mkPen((255, 255, 0,255) ,width=4)
+        if roidict==None:
+            _roi = pg.RectROI(pos=[np.random.randint(0,4000),0], size=[500, self.ymax[0]],centered=True, \
+                       movable=True, resizable=True, removable=True, maxBounds=QRectF(0,0,int(self.ffrutils.fs/2),self.ymax[0]) ,\
+                       pen=pg.mkPen((255, 0, 0,100), width=4),hoverPen=hovercolor,handlePen=pg.mkPen((255, 0, 0,100), width=4))
             type='stop'
         else:
-            type=roi['type']
+            type=roidict['type']
+
             if   type=='stop': color=pg.mkPen((255, 0, 0,100), width=4)
             elif type=='pass': color=pg.mkPen((0, 255, 0,100), width=4)
-            _filter = pg.RectROI(pos=roi['state']['pos'], size=roi['state']['size'],centered=True, \
-                       movable=True, resizable=True, removable=True, maxBounds=QRectF(0,0,int(self.ffrutils.fs/2),self.sig_waveform.max()) ,\
-                       pen=color,hoverPen=color,handlePen=color)
+            _roi = pg.RectROI(pos=(roidict['state']['pos'],0), size=(roidict['state']['pos']+roidict['state']['size'], self.ymax[0]),centered=True, \
+                       movable=True, resizable=True, removable=True, maxBounds=QRectF(0,0,int(self.ffrutils.fs/2),self.ymax[0]) ,\
+                       pen=color,hoverPen=hovercolor,handlePen=color)
 
-        _filter.addScaleHandle(pos=[0,0.5],center=[0.5,0.5])
-        _filter.addScaleHandle(pos=[1,0.5],center=[0.5,0.5])
-        _filter.setAcceptedMouseButtons(QtCore.Qt.LeftButton)
-        _filter.sigClicked.connect(self.__switch_filter_type)
-        _filter.sigClicked.connect(self.__apply_filter)
+        _roi.addScaleHandle(pos=[0,0.5],center=[0.5,0.5])
+        _roi.addScaleHandle(pos=[1,0.5],center=[0.5,0.5])
+        _roi.setAcceptedMouseButtons(QtCore.Qt.LeftButton)
+        _roi.sigClicked.connect(self.__switch_filter_type)
+        _roi.sigClicked.connect(self.__apply_filter)
 
-        _filter.sigRegionChanged.connect(self.__update_roi_filter)
-        _filter.sigRegionChanged.connect(self.__apply_filter)
-        _filter.sigRemoveRequested.connect(self.__remove_roi_filter)
-        self.__addItem(_filter)
-        return _filter, type
+        _roi.sigRegionChanged.connect(self.__update_roi_filter)
+        _roi.sigRegionChanged.connect(self.__apply_filter)
+        _roi.sigRemoveRequested.connect(self.__remove_roi_filter)
+        self.roifilters.append(_roi)
+        self.__addItem(_roi)
+        return _roi, type
 
     def __apply_filter(self):
         self.sig.filter_current_waveform()
@@ -124,7 +139,7 @@ class SpectralWidget():
 
     def __add_filter(self):
         roi, type = self.__construct_roi_filter()
-        new = {str(roi):{'state':roi.saveState(),'type':type}}
+        new = {roi:{'state':roi.saveState(),'type':type}}
         self.workspace.current_workspace[self.maingui.current_id]["Filters"].update(new)
         # self.__list_all()
         try:
@@ -145,14 +160,12 @@ class SpectralWidget():
             roi.handlePen = pg.mkPen((255, 0, 0,100), width=4)
             type='stop'
         n = len(self.maingui.workspace.get_filters())
-        new = {str(roi):{'state':roi.saveState(),'type':type}}
+        new = {roi:{'state':roi.saveState(),'type':type}}
         self.workspace.current_workspace[self.maingui.current_id]["Filters"].update(new)
-        # self.__update_roi_filter(roi,type)
 
     def __update_roi_filter(self,roi):
         type = self.workspace.current_workspace[self.maingui.current_id]["Filters"][roi]['type']
-
-        new = {str(roi):{'state':roi.saveState(),'type':type}}
+        new = {roi:{'state':roi.saveState(),'type':type}}
         self.workspace.current_workspace[self.maingui.current_id]["Filters"].update(new)
 
     def __list_all(self):
@@ -169,8 +182,8 @@ class SpectralWidget():
 
     def __load_roi_from_workspace(self):
         rois=self.workspace.current_workspace[self.maingui.current_id]["Filters"]
-        for id in rois:
-            self.__construct_roi_filter(rois[id])
+        for roi in rois:
+            self.__construct_roi_filter(roi)
         # roi.deleteLater()
 
 

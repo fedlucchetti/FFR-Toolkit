@@ -230,30 +230,35 @@ class Ui_MainWindow(object):
             for item in self.roisdict:
                 self.PlotTemporalWidget.removeItem(item)
         except:pass
-        self.roisdict = {'initROI':pg.RectROI([0,1], [1, 1],pen=QPen(QColor(255, 0, 0,0)))}
-        roi_width = np.max(self.ffrutils.t*1000)
+        # self.roisdict = {'initROI':pg.RectROI([0,1], [1, 1],pen=QPen(QColor(255, 0, 0,0)))}
+        self.roisdict=[]
+        roi_width = 10*1000
         # for id,sc in self.waveforms.keys():
         for id, sc in enumerate(self.sc_list):
             roi_y_pos  = np.min(self.waveforms[:,id])
             roi_height = np.abs(np.max(self.waveforms[:,id])-np.min(self.waveforms[:,id]))
-            _rectroi   = pg.RectROI(pos=[0,roi_y_pos], size=[roi_width, roi_height], \
+            _rectroi   = pg.RectROI(pos=[np.max(self.ffrutils.t*1000),roi_y_pos], size=[roi_width, roi_height], \
                        movable=True, resizable=False, removable=True, \
                        maxBounds=QRectF(0,20*roi_y_pos,roi_width,20*roi_height) ,\
-                       pen=pg.mkPen((255, 0, 0,0), width=0),\
-                       hoverPen=pg.mkPen((255, 0, 0,0), width=0),\
-                       handlePen=pg.mkPen((255, 0, 0,0), width=0))
+                       pen=pg.mkPen((255, 0, 0,255), width=2),\
+                       hoverPen=pg.mkPen((0, 255, 0,255), width=2),\
+                       handlePen=pg.mkPen((255, 0, 0,255), width=2))
 
-            _roi       = {id:_rectroi}
-            self.roisdict.update(_roi)
+            # _roi       = {id:_rectroi}
+            self.roisdict.append(_rectroi)
             self.PlotTemporalWidget.addItem(self.roisdict[id])
             self.roisdict[id].setAcceptedMouseButtons(QtCore.Qt.LeftButton)
+
             self.roisdict[id].sigClicked.connect(self.select_waveform)
             self.roisdict[id].sigClicked.connect(self.update_labels)
             self.roisdict[id].sigClicked.connect(self.update_temporal_plot)
 
+            # self.roisdict[id].sigHoverEvent.connect(self.update_temporal_plot)
+            # self.roisdict[id].sigHoverEvent.connect(self.select_waveform)
+
             self.roisdict[id].sigRegionChangeFinished.connect(self.move_waveform)
             self.roisdict[id].sigRegionChanged.connect(self.move_waveform)
-        del self.roisdict['initROI']
+        # del self.roisdict['initROI']
 
     def move_waveform(self,roi):
         pass
@@ -339,6 +344,10 @@ class Ui_MainWindow(object):
             for item in self.labellist:
                 self.PlotTemporalWidget.removeItem(item)
         except:pass
+        try:
+            for item in self.roisdict:
+                self.PlotTemporalWidget.removeItem(item)
+        except Exception as e:print(e)
         self.plotitem = []
         self.labellist = []
         waveforms, scale_factor = self.sig.normalize_waveforms(waveforms)
