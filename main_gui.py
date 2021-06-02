@@ -19,7 +19,7 @@ from PyQt5.QtCore import QEvent, QRect
 ######################
 from ffrgui.dsp       import Signal
 from ffrgui.gui       import PatientTable,SpectralWidget, FileDialog
-from ffrgui.utilities import Workspace,FFR_Utils
+from ffrgui.utilities import Workspace,FFR_Utils,DataBase, Constants
 
 
 
@@ -32,6 +32,7 @@ class Ui_MainWindow(object):
         self.CONFDIR = os.path.join(self.ROOTDIR,'conf')
         self.WORKDIR = os.path.join(self.ROOTDIR,'data','workspaces')
         print("self.ROOTDIR",self.ROOTDIR)
+        self.roisdict=[]
         ##############################
         self.defaultScList = {'Channel-V':{'EFR':[],'CDT':[],'F1':[],'F2':[],'ABR':[]}, \
                               'Channel-H':{'EFR':[],'CDT':[],'F1':[],'F2':[],'ABR':[],} }
@@ -40,12 +41,16 @@ class Ui_MainWindow(object):
         self.current_sc    = 'EFR V'
         self.current_id    = 1
         ##############################
-        self.ffrutils   = FFR_Utils.FFR_Utils(self)
-        self.name,self.number,self.date,self.stim,self.ear,self.level,self.path2json, self.code = self.ffrutils.list_all()
+        self.const   = Constants.Constants()
 
+        ##############################
+        self.database  = DataBase.DataBase(self)
         ##############################
         self.workspace         = Workspace.Workspace(self)
         self.current_workspace = None
+        ##############################
+        self.ffrutils   = FFR_Utils.FFR_Utils(self)
+        self.name,self.number,self.date,self.stim,self.ear,self.level,self.path2json, self.code = self.ffrutils.list_all()
         ##############################
         self.sig   = Signal.Signal(self)
         ##############################
@@ -106,15 +111,8 @@ class Ui_MainWindow(object):
         self.ButtonOpenDataBase.setFont(font)
         self.ButtonOpenDataBase.setObjectName("Open")
 
-        self.ButtonSaveWorkspace = QtWidgets.QPushButton(self.ButtonWidget)
-        self.ButtonSaveWorkspace.setGeometry(QtCore.QRect(30, 70, 221, 51))
-        self.ButtonSaveWorkspace.setFont(font)
-        self.ButtonSaveWorkspace.setObjectName("ButtonSaveWorkspace")
 
-        self.ButtonLoadWorkspace = QtWidgets.QPushButton(self.ButtonWidget)
-        self.ButtonLoadWorkspace.setGeometry(QtCore.QRect(30, 130, 221, 51))
-        self.ButtonLoadWorkspace.setFont(font)
-        self.ButtonLoadWorkspace.setObjectName("ButtonSaveWorkspace")
+
 
 
         self.ButtonFFT = QtWidgets.QPushButton(self.ButtonWidget)
@@ -137,9 +135,12 @@ class Ui_MainWindow(object):
         self.PlotTemporalWidget_2 = QtWidgets.QWidget(self.centralwidget)
         self.PlotTemporalWidget_2.setGeometry(QtCore.QRect(300, 110, 1481, 1200))
         self.PlotTemporalWidget_2.setObjectName("PlotTemporalWidget_2")
+
         self.PlotTemporalWidget = PlotWidget(self.PlotTemporalWidget_2)
-        self.PlotTemporalWidget.setGeometry(QtCore.QRect(10, 10, 1451, 900))
+        self.PlotTemporalWidget.setGeometry(QtCore.QRect(10, 10, 1451, 800))
         self.PlotTemporalWidget.setObjectName("PlotTemporalWidget")
+
+
         self.PatientLabel_9 = QtWidgets.QLabel(self.PlotTemporalWidget_2)
         self.PatientLabel_9.setGeometry(QtCore.QRect(200, 730, 101, 31))
 
@@ -165,36 +166,61 @@ class Ui_MainWindow(object):
 
         self.PatientLabel_13.setFont(font)
         self.PatientLabel_13.setObjectName("PatientLabel_13")
+
+
+
         MainWindow.setCentralWidget(self.centralwidget)
+
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 1794, 27))
         self.menubar.setObjectName("menubar")
+
         self.menuFile = QtWidgets.QMenu(self.menubar)
         self.menuFile.setObjectName("menuFile")
+
         self.menuEdit = QtWidgets.QMenu(self.menubar)
         self.menuEdit.setObjectName("menuEdit")
+
+        self.menuWorkspace = QtWidgets.QMenu(self.menubar)
+        self.menuWorkspace.setObjectName("menuWorkspace")
+
+        self.menuDatabase = QtWidgets.QMenu(self.menubar)
+        self.menuDatabase.setObjectName("menuDatabase")
+
         MainWindow.setMenuBar(self.menubar)
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
         self.statusbar.setObjectName("statusbar")
         MainWindow.setStatusBar(self.statusbar)
-        self.actionNew = QtWidgets.QAction(MainWindow)
-        self.actionNew.setObjectName("actionNew")
-        self.actionSave = QtWidgets.QAction(MainWindow)
-        self.actionSave.setObjectName("actionSave")
-        self.actionCopy = QtWidgets.QAction(MainWindow)
-        self.actionCopy.setObjectName("actionCopy")
-        self.actionPaste = QtWidgets.QAction(MainWindow)
-        self.actionPaste.setObjectName("actionPaste")
-        self.actionOpen_Workflow = QtWidgets.QAction(MainWindow)
-        self.actionOpen_Workflow.setObjectName("actionOpen_Workflow")
+
+
+
+
+
+
+        self.actionOpen_Workspace = QtWidgets.QAction(MainWindow)
+        self.actionOpen_Workspace.setObjectName("actionOpen_Workspace")
+
+
+        self.actionSet_DatabasePath = QtWidgets.QAction(MainWindow)
+        self.actionSet_DatabasePath.setObjectName("actionSet_DatabasePath")
+
+        self.actionSave_Workspace = QtWidgets.QAction(MainWindow)
+        self.actionSave_Workspace.setObjectName("actionSave_Workspace")
+
+
         self.menuFile.addSeparator()
-        self.menuFile.addAction(self.actionNew)
-        self.menuFile.addAction(self.actionSave)
-        self.menuFile.addAction(self.actionOpen_Workflow)
-        self.menuEdit.addAction(self.actionCopy)
-        self.menuEdit.addAction(self.actionPaste)
+
+
+        self.menuWorkspace.addAction(self.actionOpen_Workspace)
+        self.menuWorkspace.addAction(self.actionSave_Workspace)
+
+        self.menuDatabase.addAction(self.actionSet_DatabasePath)
+
+
         self.menubar.addAction(self.menuFile.menuAction())
         self.menubar.addAction(self.menuEdit.menuAction())
+        self.menubar.addAction(self.menuWorkspace.menuAction())
+        self.menubar.addAction(self.menuDatabase.menuAction())
 
         self.actions()
 
@@ -214,13 +240,17 @@ class Ui_MainWindow(object):
 
         self.ButtonFFT.clicked.connect(               lambda: self.spectralWidget.initUI('load')                         )
 
-        self.ButtonSaveWorkspace.clicked.connect(               lambda: self.workspace.save()                        )
-        self.ButtonLoadWorkspace.clicked.connect(               lambda: self.workspace.load()                        )
 
-        # self.ButtonFFT.clicked.connect(               lambda: self.spectralWidget.update_plot()                         )
-        # self.spectralWidget.lr.sigRegionChanged.connect(lambda: self.test_print())
+        self.actionOpen_Workspace.triggered.connect(lambda: self.workspace.load())
+        self.actionSave_Workspace.triggered.connect(lambda: self.workspace.save())
+
+        self.actionSet_DatabasePath.triggered.connect(lambda: self.database.select_db_path(True))
+        # self.actionOpen_Workspace.clicked.connect(               lambda: self.workspace.load()                        )
+        # self.actionSave_Workspace.clicked.connect(               lambda: self.workspace.save()                        )
 
 
+    def update_plots(self):
+        self.spectralWidget.initUI('load')
 
     def update_labels(self):
         self.PatientLabel_9.setText(self.current_sc)
@@ -237,7 +267,7 @@ class Ui_MainWindow(object):
         for id, sc in enumerate(self.sc_list):
             roi_y_pos  = np.min(self.waveforms[:,id])
             roi_height = np.abs(np.max(self.waveforms[:,id])-np.min(self.waveforms[:,id]))
-            _rectroi   = pg.RectROI(pos=[np.max(self.ffrutils.t*1000),roi_y_pos], size=[roi_width, roi_height], \
+            _rectroi   = pg.RectROI(pos=[np.max(self.const.t*1000),roi_y_pos], size=[roi_width, roi_height], \
                        movable=True, resizable=False, removable=True, \
                        maxBounds=QRectF(0,20*roi_y_pos,roi_width,20*roi_height) ,\
                        pen=pg.mkPen((255, 0, 0,255), width=2),\
@@ -279,7 +309,7 @@ class Ui_MainWindow(object):
         return sc
 
     def __add_clickable_background(self):
-        roi = pg.RectROI(pos=[0,0], size=[max(self.ffrutils.t)*1000, 20],centered=True, \
+        roi = pg.RectROI(pos=[0,0], size=[max(self.const.t)*1000, 20],centered=True, \
                    movable=False, resizable=False, removable=True ,\
                    pen=pg.mkPen((255, 0, 0,0)),hoverPen=pg.mkPen((0, 255, 0,0)),handlePen=pg.mkPen((0, 255, 0,0)))
         roi.setAcceptedMouseButtons(QtCore.Qt.LeftButton)
@@ -289,19 +319,21 @@ class Ui_MainWindow(object):
 
     def __add_cursor(self):
         print("Add Cursor")
-        xpos=np.random.randint(0,max(self.ffrutils.t)*1000)
+        xpos=np.random.randint(0,max(self.const.t)*1000)
         cursor = pg.InfiniteLine(pos=xpos,pen=pg.mkPen('y', width=4),\
                                 markers = '<|>',label=str(xpos) )
         cursor.setMovable(True)
-        cursor.setBounds([0,max(self.ffrutils.t)*1000])
+        cursor.setBounds([0,max(self.const.t)*1000])
         cursor.label.setMovable(True)
-        cursor.label.setMovable(True)
-        cursor.label.setY(0)
-        cursor.label.setColor(pg.mkColor((255, 0, 0,150)))
+        cursor.label.setY(1.5)
+        cursor.label.setColor(pg.mkColor((255, 200, 0,255)))
         cursor.label.setFont(QFont("Times", 20, QFont.Bold))
         cursor.sigDragged.connect(self.__cursor_moved)
         self.PlotTemporalWidget.addItem(cursor)
         pass
+
+    def __remove_cursor(self):
+        self.PlotTemporalWidget.removeItem(roi)
 
     # def __add_target_label(self,cursor):
     #     label = pg.TargetItem(pos=(cursor.value(),0),size=20,label=str(cursor.value()))
@@ -313,23 +345,23 @@ class Ui_MainWindow(object):
     def update_tf_plot(self):
         print('latency clicked')
         self.PlotTemporalWidget.clear()
-        plotitem     = pg.PlotDataItem(self.ffrutils.t*1000,self.current_waveform/np.max(self.current_waveform),pen=pg.mkPen('g', width=1))
+        plotitem     = pg.PlotDataItem(self.const.t*1000,self.current_waveform/np.max(self.current_waveform),pen=pg.mkPen('g', width=1))
         self.PlotTemporalWidget.addItem(plotitem)
 
         analytic_signal   = signal.hilbert(self.current_waveform)
         self.IAmplitude   = np.abs(analytic_signal)
         self.IAmplitude   = self.IAmplitude/np.max(self.IAmplitude)-2
-        plotitem     = pg.PlotDataItem(self.ffrutils.t*1000,self.IAmplitude,pen=pg.mkPen('r', width=1))
+        plotitem     = pg.PlotDataItem(self.const.t*1000,self.IAmplitude,pen=pg.mkPen('r', width=1))
         self.PlotTemporalWidget.addItem(plotitem)
 
         self.IPhase       = np.unwrap(np.angle(analytic_signal))
-        self.DeltaPhase   = np.abs(self.IPhase - 2*np.pi*self.ffrutils.get_frequency(self.current_sc)*self.ffrutils.t)
+        self.DeltaPhase   = np.abs(self.IPhase - 2*np.pi*self.ffrutils.get_frequency(self.current_sc)*self.const.t)
         self.DeltaPhase   = self.DeltaPhase/np.max(self.DeltaPhase)-4
-        plotitem     = pg.PlotDataItem(self.ffrutils.t*1000,self.DeltaPhase ,pen=pg.mkPen('b', width=1))
+        plotitem     = pg.PlotDataItem(self.const.t*1000,self.DeltaPhase ,pen=pg.mkPen('b', width=1))
         self.PlotTemporalWidget.addItem(plotitem)
 
 
-        self.PlotTemporalWidget.setLabel('bottom', 'Time [ms]', color='white', size=100)
+
 
 
     def update_temporal_plot(self,arg=None):
@@ -361,20 +393,23 @@ class Ui_MainWindow(object):
             elif sc[0]=="C ": c='b'
             elif self.current_sc!=None and self.current_id==id: c = 'r'
             else: c='w'
-            self.plotitem.append(pg.PlotDataItem(self.ffrutils.t*1000,self.waveforms[:,id],pen=pg.mkPen(c, width=1)))
+            self.plotitem.append(pg.PlotDataItem(self.const.t*1000,self.waveforms[:,id],pen=pg.mkPen(c, width=1)))
             self.PlotTemporalWidget.addItem(self.plotitem[id])
             label = pg.TextItem(sc, color="r", anchor=(0, 0))
-            label.setPos(np.amax(self.ffrutils.t*1000),self.waveforms[:,id].mean() )
+            label.setPos(np.amax(self.const.t*1000),self.waveforms[:,id].mean() )
             self.labellist.append(label)
             # label.setTextWidth(10)
             self.PlotTemporalWidget.addItem(self.labellist[id])
 
 
-        self.PlotTemporalWidget.setLimits(xMin=0,yMin=self.waveforms[:,-1].min(),yMax=2,xMax=1.1*self.ffrutils.t.max()*1000)
-        self.PlotTemporalWidget.setLabel('bottom', 'Time [ms]', color='white', size=200)
-        self.PlotTemporalWidget.setXRange(0, 1.1*self.ffrutils.t.max()*1000, padding=0)
-        print("update temporal ", self.waveforms[:,-1].min())
+        self.PlotTemporalWidget.setLimits(xMin=0,yMin=self.waveforms[:,-1].min(),yMax=2,xMax=1.1*self.const.t.max()*1000)
+        self.PlotTemporalWidget.setXRange(0, 1.1*self.const.t.max()*1000, padding=0)
         self.PlotTemporalWidget.setYRange(self.waveforms[:,-1].min(), 2, padding=0)
+
+        self.PlotTemporalWidget.showGrid(x=True, y=False,alpha=1)
+        self.PlotTemporalWidget.setLabel('left', "Amplitude",fontsize=100,color='white')
+        self.PlotTemporalWidget.setLabel('bottom', "Time [ms]",fontsize=100,color='white')
+
         self.update_rois()
         self.__add_clickable_background()
 
@@ -392,28 +427,22 @@ class Ui_MainWindow(object):
         self.ButtonOpenDataBase.setText(_translate("MainWindow", "Open Database"))
         self.ButtonAnalysis.setText(_translate("MainWindow", "Analysis"))
         self.ButtonFFT.setText(_translate("MainWindow", "Spectral"))
-        self.ButtonSaveWorkspace.setText(_translate("MainWindow", "Save Workspace"))
-        self.ButtonLoadWorkspace.setText(_translate("MainWindow", "Load Workspace"))
         self.PatientLabel_9.setText(_translate("MainWindow", "SCstring"))
         self.PatientLabel_10.setText(_translate("MainWindow", "On = "))
         self.PatientLabel_11.setText(_translate("MainWindow", "Off ="))
         self.PatientLabel_12.setText(_translate("MainWindow", "Duration ="))
         self.PatientLabel_13.setText(_translate("MainWindow", "t ="))
+
         self.menuFile.setTitle(_translate("MainWindow", "File"))
         self.menuEdit.setTitle(_translate("MainWindow", "Edit"))
-        self.actionNew.setText(_translate("MainWindow", "New"))
-        self.actionNew.setStatusTip(_translate("MainWindow", "New File"))
-        self.actionNew.setShortcut(_translate("MainWindow", "Ctrl+N"))
-        self.actionSave.setText(_translate("MainWindow", "Save"))
-        self.actionSave.setStatusTip(_translate("MainWindow", "Save a file"))
-        self.actionSave.setShortcut(_translate("MainWindow", "Ctrl+S"))
-        self.actionCopy.setText(_translate("MainWindow", "Copy"))
-        self.actionCopy.setStatusTip(_translate("MainWindow", "Copy"))
-        self.actionCopy.setShortcut(_translate("MainWindow", "Ctrl+C"))
-        self.actionPaste.setText(_translate("MainWindow", "Paste"))
-        self.actionPaste.setStatusTip(_translate("MainWindow", "Paste"))
-        self.actionPaste.setShortcut(_translate("MainWindow", "Ctrl+V"))
-        self.actionOpen_Workflow.setText(_translate("MainWindow", "Open Workflow"))
+        self.menuWorkspace.setTitle(_translate("MainWindow", "Workspace"))
+        self.menuDatabase.setTitle(_translate("MainWindow", "Database"))
+
+
+        self.actionSet_DatabasePath.setText(_translate("MainWindow", "Set path"))
+
+        self.actionOpen_Workspace.setText(_translate("MainWindow", "Open"))
+        self.actionSave_Workspace.setText(_translate("MainWindow", "Save"))
 
 
 if __name__ == "__main__":

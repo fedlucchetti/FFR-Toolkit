@@ -3,16 +3,17 @@
 import sys
 import numpy as np
 from scipy import signal
+from ffrgui.neuralnet import DeepFilter
+
 
 
 class Signal(object):
     def __init__(self,maingui):
         super().__init__()
         self.maingui = maingui
-        self.ffrutils = maingui.ffrutils
+        self.const = maingui.const
         self.workspace = maingui.workspace
-        # self.ffrutils = ffr
-        # self.ui  = ui
+        self.deepfilter = DeepFilter.DeepFilter()
 
     def normalize_waveforms(self,waveforms):
         n_sc     = 0
@@ -27,18 +28,26 @@ class Signal(object):
 
 
     def filter_current_waveform(self):
+
         waveform,_ = self.maingui.workspace.get_waveform(self.maingui.current_id,'original')
         filters  = self.maingui.workspace.get_filters()
+        # print('filter_current_waveform ', filters)
         for id in filters:
             try:
                 if filters[id]['type']=='pass':type='bandpass'
                 elif filters[id]['type']=='stop':type='bandstop'
+                else: continue
                 fmin     = filters[id]['state']['pos'][0]
                 fmax     = fmin+filters[id]['state']['size'][0]
-                print("fmin ",fmin,"   fmax ",fmax)
-                b, a     = signal.butter(4, [fmin,fmax], type,fs=self.ffrutils.fs)
+                b, a     = signal.butter(4, [fmin,fmax], type,fs=self.const.fs)
                 waveform = signal.filtfilt(b, a, waveform, padlen=150)
             except:continue
+        try:
+            if filters['42']['enable']:
+                waveform = self.deepfilter.apply_filter(waveform)
+        except Exception as e:
+            print('filter_current_waveform: ', e)
+            raise
         self.workspace.set_waveform(self.maingui.current_id,waveform)
 
 
@@ -48,7 +57,7 @@ class Signal(object):
     def order_waveforms(self,waveforms,label):
         sel_waveforms = {'init':[]}
         for idl in label:
-            _wave = {idl:np.zeros(self.ffrutils.Nt)}
+            _wave = {idl:np.zeros(self.const.Nt)}
             sel_waveforms.update(_wave)
 
         for channel in waveforms.keys():
@@ -63,11 +72,13 @@ class Signal(object):
         del sel_waveforms['init']
         return sel_waveforms
 
+
+
+
     def offset_waveforms(self,waveforms):
 
         nSC              = waveforms.shape[1]
         DC               = np.array(np.zeros(nSC))
-        print("offset_waveforms ",waveforms.shape)
         _waveforms       = waveforms
         for ids in range(nSC-1):
             DC[ids+1]  = DC[ids]   + np.abs(np.min(_waveforms[:,ids])-np.mean(_waveforms[:,ids])) + np.abs(np.max(_waveforms[:,ids+1])-np.mean(_waveforms[:,ids+1]))

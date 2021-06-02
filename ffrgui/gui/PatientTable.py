@@ -19,8 +19,8 @@ class PatientTable(QWidget):
         self.__title = ''
         self.__left = 0
         self.__top = 0
-        self.__width = 600
-        self.__height = 200
+        self.__width = 800
+        self.__height = 1000
         self.__header = ["Number","Name","Ear","Level","Stimulus"]
 
 

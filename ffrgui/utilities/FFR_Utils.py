@@ -16,6 +16,10 @@ class FFR_Utils():
 
     def __init__(self,maingui):
         self.maingui = maingui
+        self.workspace   = maingui.workspace
+        self.database    = maingui.database
+
+
         self.home_dir  = ''
         self.path      = ''
         self.fs        = 24414.0
@@ -31,15 +35,8 @@ class FFR_Utils():
                      'Channel-H':{'EFR':[],'EFR**':[],'EFR***':[],'CDT':[],'CDT*':[],'F1':[],'F2':[],'ABR':[],'Noise':[]} }
 
 
-        dbconfpathfile      = os.path.join(self.maingui.CONFDIR,'databasepath.json')
-        if os.path.exists(dbconfpathfile):
-            pass
-        else :
-            self.select_db_path()
-        with open(dbconfpathfile) as data_file:
-            data = json.load(data_file)
-            self.path_database = data['databasepath']
 
+        self.database.select_db_path(False)
 
         self.path_conf     = os.path.join(self.maingui.CONFDIR,"display.json")
         with open(self.path_conf) as data_file:
@@ -65,21 +62,7 @@ class FFR_Utils():
 
 
 
-    def select_db_path(self):
-        # startingDir = cmds.workspace(q=True, rootDirectory=True)
-        destDir = QtGui.QFileDialog.getExistingDirectory(None,
-                                                         'Open working directory',
-                                                         ".",
-                                                         QtGui.QFileDialog.ShowDirsOnly)
-        out = {'databasepath':destDir}
 
-        def popup_button(i):	self.button_text = i.text()
-        msg = QMessageBox()
-        msg.setWindowTitle("Action required")
-        msg.setText("Save as default database path " + '\n' + destDir)
-        msg.setStandardButtons( QMessageBox.Save ) # seperate buttons with "|"
-        msg.exec_()
-        with open(os.path.join(self.maingui.CONFDIR,'databasepath.json'), 'w') as outfile: json.dump(out, outfile)
 
 
     def load_path(self,path):
@@ -179,7 +162,7 @@ class FFR_Utils():
         else:
             print('SC string not valid')
 
-        return ffsfloat
+        return f
 
     def generate_stimulus(self):
         f1       = self.get_frequency("F1")
@@ -309,36 +292,45 @@ class FFR_Utils():
         code      = list()
         path2json = list()
         pattern = "*.json"
-        for subpath, subdirs, files in os.walk(self.path_database):
+        for subpath, subdirs, files in os.walk(self.database.path_database):
             # print("ffr.py path = ",path)
             for filename in files:
-                if fnmatch(filename, pattern):
-                    path = os.path.join(subpath, filename)
 
-                    path2json.append(path)
-                    with open(path) as data_file:
-                        data = json.load(data_file)
-                    if data["MetaData"]["Patient"]["Nom"]           != None \
-                       or data["MetaData"]["Patient"]["Prenom"]     != None \
-                       or data["MetaData"]["Patient"]["Number"]     != None \
-                       or data["MetaData"]["date string"]           != None \
-                       or data["MetaData"]["Patient"]["Oreille"]    != None \
-                       or data["MetaData"]["Stimulus"]["Level[dB]"] != None :
-                        year      = data["MetaData"]["date string"]
-                        year      = year[len(year)-2:len(year)]
-                        frequency = str(round(int(data["MetaData"]["Stimulus"]["F2"])-int(data["MetaData"]["Stimulus"]["F1"])))
+                if fnmatch(filename, pattern) and 'Meta' in filename:
+                    print(filename)
+                    try:
 
-                        name.append(data["MetaData"]["Patient"]["Nom"]  + ' ' + data["MetaData"]["Patient"]["Prenom"])
-                        number.append(year + data["MetaData"]["Patient"]["Number"])
-                        date.append(data["MetaData"]["date string"])
-                        stim.append('EFR' + frequency)
-                        ear.append(data["MetaData"]["Patient"]["Oreille"])
-                        level.append(str(data["MetaData"]["Stimulus"]["Level[dB]"]))
-                        code.append(''.join([data["MetaData"]["Patient"]["Nom"]  , ' ' , data["MetaData"]["Patient"]["Prenom"] ,\
-                                            year + data["MetaData"]["Patient"]["Number"]                                       ,\
-                                            data["MetaData"]["Patient"]["Oreille"]                                             ,\
-                                            str(data["MetaData"]["Stimulus"]["Level[dB]"])                                     ,\
-                                            'EFR' , frequency                                                                   ]))
+                        path = os.path.join(subpath, filename)
+
+                        path2json.append(path)
+                        with open(path) as data_file:
+                            data = json.load(data_file)
+                        try:
+                            oreille = data["MetaData"]["Patient"]["Oreille"]
+                        except: oreille = data["MetaData"]["Patient"][" Oreille"]
+                        if data["MetaData"]["Patient"]["Nom"]           != None \
+                           or data["MetaData"]["Patient"]["Prenom"]     != None \
+                           or data["MetaData"]["Patient"]["Number"]     != None \
+                           or data["MetaData"]["date string"]           != None \
+                           or oreille                                   != None \
+                           or data["MetaData"]["Stimulus"]["Level[dB]"] != None :
+                            year      = data["MetaData"]["date string"]
+                            year      = year[len(year)-2:len(year)]
+                            frequency = str(round(int(data["MetaData"]["Stimulus"]["F2"])-int(data["MetaData"]["Stimulus"]["F1"])))
+
+                            name.append(data["MetaData"]["Patient"]["Nom"]  + ' ' + data["MetaData"]["Patient"]["Prenom"])
+                            number.append(year + data["MetaData"]["Patient"]["Number"])
+                            date.append(data["MetaData"]["date string"])
+                            stim.append('EFR' + frequency)
+
+                            ear.append()
+                            level.append(str(data["MetaData"]["Stimulus"]["Level[dB]"]))
+                            code.append(''.join([data["MetaData"]["Patient"]["Nom"]  , ' ' , data["MetaData"]["Patient"]["Prenom"] ,\
+                                                year + data["MetaData"]["Patient"]["Number"]                                       ,\
+                                                oreille                                             ,\
+                                                str(data["MetaData"]["Stimulus"]["Level[dB]"])                                     ,\
+                                                'EFR' , frequency                                                                   ]))
+                    except:pass
 
 
 
