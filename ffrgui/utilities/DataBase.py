@@ -70,11 +70,12 @@ class DataBase(object):
 
 
 
-    def select_db_path(self,flag):
+    def select_db_path(self,flag=False):
+        print("select_db_path flag", flag)
         dbconfpathfile      = os.path.join(self.maingui.CONFDIR,'databasepath.json')
-        if not flag:
+        if os.path.exists(dbconfpathfile):
             pass
-        else :
+        elif not os.path.exists(dbconfpathfile) or flag :
             destDir = QtGui.QFileDialog.getExistingDirectory(None,
                                                              'Open working directory',
                                                              ".",
