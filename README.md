@@ -4,6 +4,6 @@
 
 > pip3 install -e .
 
-## RUN
+## TEST RUN
 
 > python3 main_gui.py

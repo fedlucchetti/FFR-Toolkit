@@ -1,3 +1,3 @@
 pip3 install pyinstaller
 pip3 install -e .
-pyinstaller --onefile --windowed main_gui.py
+pyinstaller --name "FFRGUI" --onefile  main_gui.py
