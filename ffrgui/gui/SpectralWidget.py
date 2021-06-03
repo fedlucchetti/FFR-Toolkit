@@ -23,7 +23,6 @@ class SpectralWidget():
         super().__init__()
         self.maingui = maingui
         self.sig = maingui.sig
-        self.ffrutils = maingui.ffrutils
         self.const = maingui.const
         self.workspace = maingui.workspace
         self.plot_style = pg.mkPen((255, 100, 0,255) ,width=2)
@@ -116,8 +115,8 @@ class SpectralWidget():
             else:flag='original'
 
             sig_waveform, noise_waveform      = self.workspace.get_sc_spectral(flag)
-            self.sig_waveform,signal_f        = self.ffrutils.smooth_plot(self.const.f,sig_waveform,window=91)
-            self.noise_waveform,noise_f       = self.ffrutils.smooth_plot(self.const.f,noise_waveform,window=91)
+            self.sig_waveform,signal_f        = self.sig.smooth_plot(self.const.f,sig_waveform,window=91)
+            self.noise_waveform,noise_f       = self.sig.smooth_plot(self.const.f,noise_waveform,window=91)
 
 
             self.signal_spectra = pg.PlotDataItem(signal_f,self.sig_waveform,pen=self.plot_style)

@@ -96,10 +96,7 @@ class FFR_Utils():
         dir_file = os.path.split(path)
         self.home_dir = dir_file[0]
 
-    def get_metadata(self):
-        with open(self.path) as data_file:
-            data = json.load(data_file)
-        return data["MetaData"]
+
 
     def load_json(self):
         data = []
@@ -282,59 +279,6 @@ class FFR_Utils():
 
         return index
 
-    def list_all(self):
-        name      = list()
-        number    = list()
-        date      = list()
-        stim      = list()
-        ear       = list()
-        level     = list()
-        code      = list()
-        path2json = list()
-        pattern = "*.json"
-        for subpath, subdirs, files in os.walk(self.database.path_database):
-            # print("ffr.py path = ",path)
-            for filename in files:
-
-                if fnmatch(filename, pattern) and 'Meta' in filename:
-                    print(filename)
-                    try:
-
-                        path = os.path.join(subpath, filename)
-
-                        path2json.append(path)
-                        with open(path) as data_file:
-                            data = json.load(data_file)
-                        try:
-                            oreille = data["MetaData"]["Patient"]["Oreille"]
-                        except: oreille = data["MetaData"]["Patient"][" Oreille"]
-                        if data["MetaData"]["Patient"]["Nom"]           != None \
-                           or data["MetaData"]["Patient"]["Prenom"]     != None \
-                           or data["MetaData"]["Patient"]["Number"]     != None \
-                           or data["MetaData"]["date string"]           != None \
-                           or oreille                                   != None \
-                           or data["MetaData"]["Stimulus"]["Level[dB]"] != None :
-                            year      = data["MetaData"]["date string"]
-                            year      = year[len(year)-2:len(year)]
-                            frequency = str(round(int(data["MetaData"]["Stimulus"]["F2"])-int(data["MetaData"]["Stimulus"]["F1"])))
-
-                            name.append(data["MetaData"]["Patient"]["Nom"]  + ' ' + data["MetaData"]["Patient"]["Prenom"])
-                            number.append(year + data["MetaData"]["Patient"]["Number"])
-                            date.append(data["MetaData"]["date string"])
-                            stim.append('EFR' + frequency)
-
-                            ear.append()
-                            level.append(str(data["MetaData"]["Stimulus"]["Level[dB]"]))
-                            code.append(''.join([data["MetaData"]["Patient"]["Nom"]  , ' ' , data["MetaData"]["Patient"]["Prenom"] ,\
-                                                year + data["MetaData"]["Patient"]["Number"]                                       ,\
-                                                oreille                                             ,\
-                                                str(data["MetaData"]["Stimulus"]["Level[dB]"])                                     ,\
-                                                'EFR' , frequency                                                                   ]))
-                    except:pass
-
-
-
-        return name,number,date,stim,ear,level,path2json,code
 
 
 

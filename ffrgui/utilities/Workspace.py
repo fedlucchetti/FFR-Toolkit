@@ -13,10 +13,10 @@ from collections.abc import Mapping
 class Workspace(object):
     def __init__(self,maingui):
         self.maingui   = maingui
-        # self.ffrutils  = maingui.ffrutils
         self.database  = maingui.database
         self.const     = maingui.const
         self.current_workspace = {}
+        # self.database.load()
 
     def init_workspace(self):
 

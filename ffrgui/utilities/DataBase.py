@@ -4,6 +4,8 @@ from scipy import signal
 from PyQt5 import  QtGui
 from PyQt5.QtWidgets import QMessageBox
 from os.path import split, join
+from fnmatch import fnmatch
+
 
 
 
@@ -73,9 +75,9 @@ class DataBase(object):
     def select_db_path(self,flag=False):
         print("select_db_path flag", flag)
         dbconfpathfile      = os.path.join(self.maingui.CONFDIR,'databasepath.json')
-        if os.path.exists(dbconfpathfile):
-            pass
-        elif not os.path.exists(dbconfpathfile) or flag :
+
+        if not os.path.exists(dbconfpathfile) or flag :
+            print("select_db_path load new")
             destDir = QtGui.QFileDialog.getExistingDirectory(None,
                                                              'Open working directory',
                                                              ".",
@@ -95,3 +97,89 @@ class DataBase(object):
         with open(dbconfpathfile) as data_file:
             data = json.load(data_file)
             self.path_database = self.__join_path(data['databasepath'])
+        # self.load()
+
+    def get_value_from_metadata(self,metadata,field):
+        value=None
+        try:
+            value = metadata["MetaData"]["Patient"][field]
+        except Exception as e:
+            # print('get_value_from_metadata',e)
+            if field=='Oreille':
+                value = metadata["MetaData"]["Patient"][" Oreille"]
+            elif field=='F1' or field=='F2' or field=="Level[dB]":
+                value = str(metadata["MetaData"]["Stimulus"][field])
+            else: value = ''
+        return value
+
+    def load(self):
+        if self.path_database==None:
+            self.select_db_path()
+        self.database = {}
+        pattern = "*.json"
+        key=0
+        for subpath, subdirs, files in os.walk(self.path_database):
+            # print("ffr.py path = ",path)
+            for filename in files:
+                if fnmatch(filename, pattern) and 'Meta' in filename:
+                    # print(filename)
+                    try:
+                        path2json = os.path.join(subpath, filename)
+                        with open(path2json) as data_file:
+                            data = json.load(data_file)
+                        nom    = self.get_value_from_metadata(data,"Nom")
+                        prenom = self.get_value_from_metadata(data,"Prenom")
+                        number = self.get_value_from_metadata(data,"Number")
+                        date   = self.get_value_from_metadata(data,"date string")
+                        ear    = self.get_value_from_metadata(data,"Oreille")
+                        level  = self.get_value_from_metadata(data,"Level[dB]")
+                        year          = data["MetaData"]["date string"]
+                        year          = year[len(year)-2:len(year)]
+                        f1            = self.get_value_from_metadata(data,"F1")
+                        f2            = self.get_value_from_metadata(data,"F2")
+                        efr_frequency = str(round(int(f2)-int(f1)))
+
+                        new={str(key):{'name'          : nom  + ' ' + prenom,
+                                       'patient_number': year + number      ,
+                                       'date'          : date               ,
+                                       'frequency_efr' : efr_frequency      ,
+                                       'stim'          : 'f1'+str(f1)+'f2'+str(f2),
+                                       'f1'            : str(f1),
+                                       'f2'            : str(f2),
+                                       'ear'           : ear,
+                                       'level'         : level,
+                                       'code'          : ''.join([nom,' ',prenom,year+number,ear,level,'f1'+str(f1)+'f2'+str(f2) ]),
+                                       'path2json'     : path2json
+                                       }
+                            }
+                        self.database.update(new)
+                        key+=1
+                    except Exception as e:print(e)
+
+
+    def get_frequency(self,SCstring):
+        metadata = self.get_metadata()
+        f1       = float(metadata["Stimulus"]["F1"])
+        f2       = float(metadata["Stimulus"]["F2"])
+
+        f        = None
+        if SCstring[0:2] == 'F1' :
+            f = f1
+        elif SCstring[0:2] == 'F2':
+            f = f2
+        elif SCstring[0:3] == 'EFR'    or fnmatch(SCstring, 'ENV') or SCstring[0:3]=='EFR':
+            f = f2-f1
+        elif SCstring[0:5] == 'EFR**'  or SCstring[0:4] == 'DENV'  or SCstring[0:5] == 'ENV**':
+            f = 2*(f1-f2)
+        elif SCstring[0:6] == 'EFR***' or SCstring[0:5] == 'DDENV' or SCstring[0:6] == 'ENV***':
+            f = 3*(f1-f2)
+        elif SCstring[0:3] == 'CDT':
+            f = 2*f1-f2
+        elif SCstring[0:4] == 'CDT*':
+            f = 2*f2-f1
+        elif SCstring[0:3] == 'ABR':
+            f = 80
+        else:
+            print('SC string not valid')
+
+        return f

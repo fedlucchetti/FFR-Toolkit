@@ -45,12 +45,13 @@ class Ui_MainWindow(object):
 
         ##############################
         self.database  = DataBase.DataBase(self)
+        self.database.load()
         ##############################
         self.workspace         = Workspace.Workspace(self)
         self.current_workspace = None
         ##############################
-        self.ffrutils   = FFR_Utils.FFR_Utils(self)
-        self.name,self.number,self.date,self.stim,self.ear,self.level,self.path2json, self.code = self.ffrutils.list_all()
+        # self.ffrutils   = FFR_Utils.FFR_Utils(self)
+        # self.name,self.number,self.date,self.stim,self.ear,self.level,self.path2json, self.code = self.ffrutils.list_all()
         ##############################
         self.sig   = Signal.Signal(self)
         ##############################
@@ -355,7 +356,7 @@ class Ui_MainWindow(object):
         self.PlotTemporalWidget.addItem(plotitem)
 
         self.IPhase       = np.unwrap(np.angle(analytic_signal))
-        self.DeltaPhase   = np.abs(self.IPhase - 2*np.pi*self.ffrutils.get_frequency(self.current_sc)*self.const.t)
+        self.DeltaPhase   = np.abs(self.IPhase - 2*np.pi*self.database.get_frequency(self.current_sc)*self.const.t)
         self.DeltaPhase   = self.DeltaPhase/np.max(self.DeltaPhase)-4
         plotitem     = pg.PlotDataItem(self.const.t*1000,self.DeltaPhase ,pen=pg.mkPen('b', width=1))
         self.PlotTemporalWidget.addItem(plotitem)

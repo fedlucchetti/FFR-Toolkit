@@ -86,3 +86,9 @@ class Signal(object):
 
 
         return _waveforms
+
+    def smooth_plot(self,x,y,window=23):
+        xvals        = np.linspace(0,np.max(self.const.f),self.const.Nf*8)
+        interpolated = np.interp(xvals,x,y)
+        smoothed     = signal.savgol_filter(interpolated, window, 4)
+        return smoothed , xvals
