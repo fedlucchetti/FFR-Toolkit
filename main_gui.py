@@ -276,7 +276,7 @@ class Ui_MainWindow(object):
                        maxBounds=QRectF(0,20*roi_y_pos,roi_width,20*roi_height) ,\
                        pen=pg.mkPen((255, 0, 0,255), width=2),\
                        hoverPen=pg.mkPen((0, 255, 0,255), width=2),\
-                       )
+                       handlePen=pg.mkPen((255, 0, 0,255), width=2))
 
             # _roi       = {id:_rectroi}
             self.roisdict.append(_rectroi)
@@ -315,7 +315,7 @@ class Ui_MainWindow(object):
     def __add_clickable_background(self):
         roi = pg.RectROI(pos=[0,0], size=[max(self.const.t)*1000, 20],centered=True, \
                    movable=False, resizable=False, removable=True ,\
-                   pen=pg.mkPen((255, 0, 0,0)),hoverPen=pg.mkPen((0, 255, 0,0)))
+                   pen=pg.mkPen((255, 0, 0,0)),hoverPen=pg.mkPen((0, 255, 0,0)),handlePen=pg.mkPen((0, 255, 0,0)))
         roi.setAcceptedMouseButtons(QtCore.Qt.LeftButton)
         roi.sigClicked.connect(self.__add_cursor)
         self.PlotTemporalWidget.addItem(roi)
