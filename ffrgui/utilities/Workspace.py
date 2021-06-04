@@ -35,17 +35,18 @@ class Workspace(object):
             newentry = {id:{"MetaData":metadata,
                            "SC":label,
                            "Data":{"original":
-                                        {"waveform":list(copy.deepcopy(json_data["FFR"][ch][sc]["AVG"]["Waveform"])),
-                                         "analysis":list(copy.deepcopy(json_data["FFR"][ch][sc]["Analysis"])),
-                                         "gui":{"ymax":np.max(np.abs(np.fft.fft(json_data["FFR"][ch][sc]["AVG"]["Waveform"])))}},
+                                        {"waveform":list(copy.deepcopy(self.database.load_AVG(json_data,ch,sc))),
+                                         "analysis":list(copy.deepcopy(self.database.load_Analysis(json_data,ch,sc))),
+                                         "gui":{"ymax":np.max(np.abs(np.fft.fft(self.database.load_AVG(json_data,ch,sc))))}},
                                    "filtered":
-                                        {"waveform":list(copy.deepcopy(json_data["FFR"][ch][sc]["AVG"]["Waveform"])),
-                                         "analysis":list(copy.deepcopy(json_data["FFR"][ch][sc]["Analysis"]))},
-                                   "noise"   :list(copy.deepcopy(json_data["FFR"][ch]["Noise"]["AVG"]["Waveform"]))
+                                        {"waveform":list(copy.deepcopy(self.database.load_AVG(json_data,ch,sc))),
+                                         "analysis":list(copy.deepcopy(self.database.load_Analysis(json_data,ch,sc)))},
+                                   "noise"   :list(copy.deepcopy(copy.deepcopy(self.database.load_AVG(json_data,ch,"Noise"))))
                                    },
                            "Filters":{'42':{'state':{'pos':(0.0,0.0),'size':(0.0,0.0),'angle':(0.0)},'type':'autoencoder','enable':0}}
                            }
                         }
+
             self.current_workspace.update(newentry)
             id+=1
         self.maingui.update_temporal_plot()

@@ -181,6 +181,18 @@ class DataBase(object):
                     except Exception as e:print("database load ERROR:", e)
 
 
+    def load_AVG(self,json_data,ch,sc):
+        waveform=json_data["FFR"][ch][sc]["AVG"]["Waveform"]
+        # for id,x in enumerate(waveform):
+        #     waveform[id]=float(x.replace(',','.'))
+        return waveform
+
+    def load_Analysis(self,json_data,ch,sc):
+        analysis=json_data["FFR"][ch][sc]["Analysis"]
+        return analysis
+
+
+
     def get_frequency(self,SCstring):
         metadata = self.get_metadata()
         f1       = float(metadata["Stimulus"]["F1"])
