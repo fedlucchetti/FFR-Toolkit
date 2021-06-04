@@ -1,15 +1,15 @@
-import sys, json, copy, os
+import sys, json, copy, os, platform
 import numpy as np
 from scipy import signal
 from PyQt5 import  QtGui
 from PyQt5.QtWidgets import QMessageBox
 from os.path import split, join
 from fnmatch import fnmatch
+from tqdm import tqdm
 
 
 
-
-
+SYSTEM = platform.system()
 
 
 
@@ -53,21 +53,40 @@ class DataBase(object):
         rest=path
         out,outjson=[],{}
         while True:
-            if len(split(rest)[0])==1:break
+            if SYSTEM=='Windows':
+                if len(split(rest)[0])==3:
+                    out.append(split(rest)[1])
+                    out.append(split(rest)[0][0:2])
+                    break
+                else:
+                    out.append(split(rest)[1])
+                    rest = split(rest)[0]
             else:
-                out.append(split(rest)[1])
-                rest = split(rest)[0]
-        out.append(split(rest)[1])
+                if len(split(rest)[0])==1 or len(split(rest)[0])==2:
+                    out.append(split(rest)[1])
+                    break
+                else:
+                    out.append(split(rest)[1])
+                    rest = split(rest)[0]
         out = out[::-1]
         for id,el in enumerate(out):
             outjson.update({str(id):el})
         return outjson
 
     def __join_path(self,dict_path):
-        outpath=' '
-        for value in dict_path.values():
-            outpath = join(outpath,value)
-        return outpath[1::]
+        if SYSTEM=="Windows":
+            outpath=''
+            for id,value in enumerate(dict_path.values()):
+                if id==0:continue
+                else:
+                    outpath = join(outpath,value)
+            return join(dict_path["0"],os.sep,outpath)
+        else:
+            outpath=' '
+            for id,value in enumerate(dict_path.values()):
+                outpath = join(outpath,value)
+            return outpath[1::]
+
 
 
 
@@ -97,6 +116,7 @@ class DataBase(object):
         with open(dbconfpathfile) as data_file:
             data = json.load(data_file)
             self.path_database = self.__join_path(data['databasepath'])
+        print("self.path_database", self.path_database)
         # self.load()
 
     def get_value_from_metadata(self,metadata,field):
@@ -106,7 +126,10 @@ class DataBase(object):
         except Exception as e:
             # print('get_value_from_metadata',e)
             if field=='Oreille':
-                value = metadata["MetaData"]["Patient"][" Oreille"]
+                try:
+                    value = metadata["MetaData"]["Patient"][" Oreille"]
+                except:
+                    value = metadata["MetaData"]["Patient"]["Oreille "]
             elif field=='F1' or field=='F2' or field=="Level[dB]":
                 value = str(metadata["MetaData"]["Stimulus"][field])
             else: value = ''
@@ -118,11 +141,12 @@ class DataBase(object):
         self.database = {}
         pattern = "*.json"
         key=0
-        for subpath, subdirs, files in os.walk(self.path_database):
+        print("loading database")
+        for subpath, subdirs, files in tqdm(os.walk(self.path_database)):
             # print("ffr.py path = ",path)
-            for filename in files:
+            for filename in tqdm(files):
                 if fnmatch(filename, pattern) and 'Meta' in filename:
-                    # print(filename)
+                    print(os.path.join(subpath, filename))
                     try:
                         path2json = os.path.join(subpath, filename)
                         with open(path2json) as data_file:
@@ -153,8 +177,9 @@ class DataBase(object):
                                        }
                             }
                         self.database.update(new)
+                        print("database load:", new)
                         key+=1
-                    except Exception as e:print(e)
+                    except Exception as e:print("database load ERROR:", e)
 
 
     def get_frequency(self,SCstring):
