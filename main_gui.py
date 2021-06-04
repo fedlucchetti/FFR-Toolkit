@@ -120,8 +120,6 @@ class Ui_MainWindow(object):
         self.ButtonFFT.setGeometry(QtCore.QRect(30, 200, 221, 51))
         self.ButtonFFT.setFont(font)
         self.ButtonFFT.setObjectName("ButtonFFT")
-
-
         self.ButtonAnalysis = QtWidgets.QPushButton(self.ButtonWidget)
         self.ButtonAnalysis.setGeometry(QtCore.QRect(30, 270, 221, 51))
         self.ButtonAnalysis.setFont(font)
@@ -295,7 +293,7 @@ class Ui_MainWindow(object):
         # del self.roisdict['initROI']
 
     def move_waveform(self,roi):
-        pass
+        passtensorflow
 
 
     def select_waveform(self,roi):
@@ -322,7 +320,6 @@ class Ui_MainWindow(object):
 
 
     def __add_cursor(self):
-        print("Add Cursor")
         xpos=np.random.randint(0,max(self.const.t)*1000)
         cursor = pg.InfiniteLine(pos=xpos,pen=pg.mkPen('y', width=4),\
                                 markers = '<|>',label=str(xpos) )

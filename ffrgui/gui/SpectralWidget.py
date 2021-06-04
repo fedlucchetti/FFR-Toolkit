@@ -86,7 +86,7 @@ class SpectralWidget():
             # raise
 
     def btnstate(self):
-        print('btnstate: ',self.deepfilterbutton.isChecked())
+        # print('btnstate: ',self.deepfilterbutton.isChecked())
         if self.deepfilterbutton.isChecked():
             self.__add_deepfilter()
         else:
@@ -251,8 +251,6 @@ class SpectralWidget():
         except: pass
 
     def __add_deepfilter(self):
-        # roi, type = self.__construct_roi_filter('new')
-        print('checked')
         new = {'42':{'state':{'pos':(0.0,0.0),'size':(0.0,0.0),'angle':(0.0)},'type':'autoencoder','enable':1}}
         self.workspace.current_workspace[self.maingui.current_id]["Filters"].update(new)
         self.plot_style = pg.mkPen((0, 80, 220,255) ,width=2)
@@ -261,7 +259,6 @@ class SpectralWidget():
         self.__apply_filter()
 
     def __remove_deepfilter(self):
-        print('unchecked')
         new = {'42':{'state':{'pos':(0.0,0.0),'size':(0.0,0.0),'angle':(0.0)},'type':'autoencoder','enable':0}}
         self.deepfilterbutton.setText('Apply DeepFilter')
         self.workspace.current_workspace[self.maingui.current_id]["Filters"].update(new)

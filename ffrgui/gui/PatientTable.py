@@ -49,7 +49,6 @@ class PatientTable(QWidget):
 
     def onHeaderClicked(self, logicalIndex):
         header = self.__header[logicalIndex]
-        print("onHeaderClicked: ", header, logicalIndex)
         self.tableWidget.sortItems(logicalIndex)
         # if header=="Number":
         #     idx = np.argsort(np.array(self.maingui.number).astype("int")).astype("int")
@@ -110,7 +109,7 @@ class PatientTable(QWidget):
         print("\n")
         for currentQTableWidgetItem in self.tableWidget.selectedItems():
             self.maingui.current_json = self.database.database[str(currentQTableWidgetItem.row())]['path2json']
-            print("table:  ",currentQTableWidgetItem.row())
+            # print("table:  ",currentQTableWidgetItem.row())
 
 
 

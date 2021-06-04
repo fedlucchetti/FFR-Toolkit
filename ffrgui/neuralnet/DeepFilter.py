@@ -1,6 +1,9 @@
 import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 # os.environ["CUDA_VISIBLE_DEVICES"]="-1"
 from tensorflow.keras.models import load_model
+# tf.get_logger().setLevel('INFO')
+
 import sys
 from os.path import split
 
@@ -37,7 +40,6 @@ class DeepFilter():
         waveform    = self.__reshape__(waveform)
         filtered    = np.array(self.filtermodel.predict(waveform,batch_size=1)).astype('float')
         filtered    = np.reshape(filtered,[self.Nt])
-        print(filtered)
         return (filtered*2-1)*scale
 
 

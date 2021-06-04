@@ -104,7 +104,7 @@ class DataBase(object):
             msg = QMessageBox()
             msg.setWindowTitle("Action required")
             msg.setText("Save as default database path " + '\n' + destDir)
-            print(os.path.split(destDir))
+            # print(os.path.split(destDir))
             msg.setStandardButtons( QMessageBox.Save ) # seperate buttons with "|"
             msg.exec_()
             with open(os.path.join(self.maingui.CONFDIR,'databasepath.json'), 'w') as outfile:
