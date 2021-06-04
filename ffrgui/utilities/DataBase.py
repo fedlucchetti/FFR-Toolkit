@@ -28,7 +28,6 @@ class DataBase(object):
         if waveforms == None:waveforms = self.initwaveforms
         #if json_path == None: json_path = self.path
         json_path = self.path
-        print('FFR.py load JSON path: ',json_path)
         sc_list = []
         with open(json_path) as data_file: data = json.load(data_file)
 
@@ -92,11 +91,9 @@ class DataBase(object):
 
 
     def select_db_path(self,flag=False):
-        print("select_db_path flag", flag)
         dbconfpathfile      = os.path.join(self.maingui.CONFDIR,'databasepath.json')
 
         if not os.path.exists(dbconfpathfile) or flag :
-            print("select_db_path load new")
             destDir = QtGui.QFileDialog.getExistingDirectory(None,
                                                              'Open working directory',
                                                              ".",
@@ -118,6 +115,8 @@ class DataBase(object):
             self.path_database = self.__join_path(data['databasepath'])
         print("self.path_database", self.path_database)
         # self.load()
+        self.maingui.update_database_table()
+
 
     def get_value_from_metadata(self,metadata,field):
         value=None
@@ -136,17 +135,18 @@ class DataBase(object):
         return value
 
     def load(self):
-        if self.path_database==None:
-            self.select_db_path()
+        try:
+            if self.path_database==None:
+                self.select_db_path()
+        except:pass
         self.database = {}
         pattern = "*.json"
         key=0
-        print("loading database")
         for subpath, subdirs, files in tqdm(os.walk(self.path_database)):
             # print("ffr.py path = ",path)
-            for filename in tqdm(files):
+            for filename in files:
                 if fnmatch(filename, pattern) and 'Meta' in filename:
-                    print(os.path.join(subpath, filename))
+                    # print(os.path.join(subpath, filename))
                     try:
                         path2json = os.path.join(subpath, filename)
                         with open(path2json) as data_file:
@@ -177,7 +177,6 @@ class DataBase(object):
                                        }
                             }
                         self.database.update(new)
-                        print("database load:", new)
                         key+=1
                     except Exception as e:print("database load ERROR:", e)
 

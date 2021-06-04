@@ -231,11 +231,11 @@ class Ui_MainWindow(object):
 
 
     def actions(self):
-        self.ButtonOpenDataBase.clicked.connect(  lambda : self.table.show()                                     )
+        self.ButtonOpenDataBase.clicked.connect(  lambda : self.update_database_table()                                     )
         self.ButtonRefresh.clicked.connect(           lambda : self.update_temporal_plot()                           )
         self.table.tableWidget.clicked.connect(       lambda : self.update_temporal_plot())
 
-        self.ButtonAnalysis.clicked.connect(           lambda: self.update_tf_plot()                                  )
+        # self.ButtonAnalysis.clicked.connect(           lambda: self.update_tf_plot()                                  )
         self.ButtonRefresh.clicked.connect(           lambda: self.workspace.init_workspace()                                  )
         # self.ButtonAnalysis.clicked.connect(           lambda : self.update_widget_size(self.ButtonAnalysis.isChecked()))
 
@@ -252,6 +252,9 @@ class Ui_MainWindow(object):
 
     def update_plots(self):
         self.spectralWidget.initUI('load')
+
+    def update_database_table(self):
+        self.table.updateTable()
 
     def update_labels(self):
         self.PatientLabel_9.setText(self.current_sc)

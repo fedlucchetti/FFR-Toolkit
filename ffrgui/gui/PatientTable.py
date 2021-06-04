@@ -62,7 +62,8 @@ class PatientTable(QWidget):
         # self.updateTable()
 
     def updateTable(self):
-        for row in range(self.Nrows):
+        self.database.load()
+        for row in range(len(self.database.database)):
             self.tableWidget.setItem(row,0, QTableWidgetItem(str(self.database.database[str(row)]['patient_number'])))
             self.tableWidget.setItem(row,1, QTableWidgetItem(str(self.database.database[str(row)]['name'])))
             self.tableWidget.setItem(row,2, QTableWidgetItem(str(self.database.database[str(row)]['ear'])))
@@ -71,6 +72,7 @@ class PatientTable(QWidget):
             self.tableWidget.setItem(row,5, QTableWidgetItem(str(self.database.database[str(row)]['f1'])))
             self.tableWidget.setItem(row,6, QTableWidgetItem(str(self.database.database[str(row)]['f2'])))
         self.tableWidget.move(0,0)
+        self.show()
 
 
 
@@ -82,7 +84,7 @@ class PatientTable(QWidget):
         self.Nrows    = len(self.database.database)
         self.Ncolumns = 7
         self.tableWidget = QTableWidget()
-        self.tableWidget.setRowCount(self.Nrows)
+        self.tableWidget.setRowCount(len(self.database.database))
         self.tableWidget.setColumnCount(self.Ncolumns)
         self.tableWidget.setHorizontalHeaderLabels(self.__header)
         for col,item in enumerate(self.__header):
@@ -90,7 +92,7 @@ class PatientTable(QWidget):
             self.tableWidget.setHorizontalHeaderItem(col,item)
             # self.tableWidget.itemClicked(item)
         self.tableWidget.horizontalHeader().sectionClicked.connect(self.onHeaderClicked)
-        for row in range(self.Nrows):
+        for row in range(len(self.database.database)):
             self.tableWidget.setItem(row,0, QTableWidgetItem(str(self.database.database[str(row)]['patient_number'])))
             self.tableWidget.setItem(row,1, QTableWidgetItem(str(self.database.database[str(row)]['name'])))
             self.tableWidget.setItem(row,2, QTableWidgetItem(str(self.database.database[str(row)]['ear'])))
