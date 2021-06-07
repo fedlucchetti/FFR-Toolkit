@@ -34,7 +34,7 @@ class TemporalWidget():
         self.PlotTemporalWidget = PlotWidget(self.maingui.TemporalWidgetContainer)
         self.PlotTemporalWidget.setGeometry(QtCore.QRect(10, 10, 1451, 800))
         self.PlotTemporalWidget.setObjectName("PlotTemporalWidget")
-        self.__add_cursor_button("Add cursor")
+        # self.__add_cursor_button("Add cursor")
 
     def update(self,arg=None):
         waveforms, self.sc_list = self.workspace.load_AVGs()
