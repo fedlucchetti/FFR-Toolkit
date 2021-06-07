@@ -24,6 +24,8 @@ class TemporalWidget():
         self.const = maingui.const
         self.workspace = maingui.workspace
         self.plot_style = pg.mkPen((255, 100, 0,255) ,width=2)
+        self.waveform_rois = []
+        self.cursor_list       = []
 
 
 
@@ -32,6 +34,7 @@ class TemporalWidget():
         self.PlotTemporalWidget = PlotWidget(self.maingui.TemporalWidgetContainer)
         self.PlotTemporalWidget.setGeometry(QtCore.QRect(10, 10, 1451, 800))
         self.PlotTemporalWidget.setObjectName("PlotTemporalWidget")
+        self.__add_cursor_button("Add cursor")
 
     def update(self,arg=None):
         waveforms, self.sc_list = self.workspace.load_AVGs()
@@ -46,7 +49,7 @@ class TemporalWidget():
                 self.PlotTemporalWidget.removeItem(item)
         except:pass
         try:
-            for item in self.roisdict:
+            for item in self.waveform_rois:
                 self.PlotTemporalWidget.removeItem(item)
         except Exception as e:print(e)
         self.plotitem = []
@@ -85,11 +88,11 @@ class TemporalWidget():
 
     def update_rois(self):
         try:
-            for item in self.roisdict:
+            for item in self.waveform_rois:
                 self.PlotTemporalWidget.removeItem(item)
         except:pass
-        # self.roisdict = {'initROI':pg.RectROI([0,1], [1, 1],pen=QPen(QColor(255, 0, 0,0)))}
-        self.roisdict=[]
+        # self.waveform_rois = {'initROI':pg.RectROI([0,1], [1, 1],pen=QPen(QColor(255, 0, 0,0)))}
+        self.waveform_rois=[]
         roi_width = 10*1000
         # for id,sc in self.waveforms.keys():
         for id, sc in enumerate(self.sc_list):
@@ -103,19 +106,19 @@ class TemporalWidget():
                        handlePen=pg.mkPen((255, 0, 0,255), width=2))
 
             # _roi       = {id:_rectroi}
-            self.roisdict.append(_rectroi)
-            self.PlotTemporalWidget.addItem(self.roisdict[id])
-            self.roisdict[id].setAcceptedMouseButtons(QtCore.Qt.LeftButton)
+            self.waveform_rois.append(_rectroi)
+            self.PlotTemporalWidget.addItem(self.waveform_rois[id])
+            self.waveform_rois[id].setAcceptedMouseButtons(QtCore.Qt.LeftButton)
 
-            self.roisdict[id].sigClicked.connect(self.select_waveform)
-            self.roisdict[id].sigClicked.connect(self.update)
+            self.waveform_rois[id].sigClicked.connect(self.select_waveform)
+            self.waveform_rois[id].sigClicked.connect(self.update)
 
-            # self.roisdict[id].sigHoverEvent.connect(self.update_temporal_plot)
-            # self.roisdict[id].sigHoverEvent.connect(self.select_waveform)
+            # self.waveform_rois[id].sigHoverEvent.connect(self.update_temporal_plot)
+            # self.waveform_rois[id].sigHoverEvent.connect(self.select_waveform)
 
-            self.roisdict[id].sigRegionChangeFinished.connect(self.move_waveform)
-            self.roisdict[id].sigRegionChanged.connect(self.move_waveform)
-        # del self.roisdict['initROI']
+            self.waveform_rois[id].sigRegionChangeFinished.connect(self.move_waveform)
+            self.waveform_rois[id].sigRegionChanged.connect(self.move_waveform)
+        # del self.waveform_rois['initROI']
 
     def select_waveform(self,roi):
         x,y = roi.pos()
@@ -145,6 +148,24 @@ class TemporalWidget():
         self.PlotTemporalWidget.addItem(roi)
 
 
+    def __add_cursor_button(self,label):
+        _font = QtGui.QFont()
+        _font.setPointSize(18)
+        _font.setBold(True)
+        _font.setWeight(75)
+        self.proxy = QtGui.QGraphicsProxyWidget()
+        self.deepfilterbutton = QtGui.QPushButton(label)
+        # self.deepfilterbutton.setCheckable(True)
+        # self.deepfilterbutton.toggle()
+
+        # self.deepfilterbutton.clicked.connect(self.btnstate)
+        self.deepfilterbutton.setFont(_font)
+        self.proxy.setWidget(self.deepfilterbutton)
+        try:
+            self.PlotTemporalWidget.addItem(self.proxy,row=1,col=0)
+        except:pass
+
+
     def __add_cursor(self):
         xpos=np.random.randint(0,max(self.const.t)*1000)
         cursor = pg.InfiniteLine(pos=xpos,pen=pg.mkPen('y', width=4),\
@@ -159,13 +180,15 @@ class TemporalWidget():
         # cursor.sigClicked.connect(self.test_print)
         self.PlotTemporalWidget.addItem(cursor)
 
-        cursorbutton = pg.RectROI(pos=[cursor.value(),1], size=[2.5, 0.5],centered=True,
-                          movable=True, resizable=True, removable=True,
-                          pen=pg.mkPen((255, 0, 0,100), width=4),
-                          hoverPen=pg.mkPen((255, 255, 0,100), width=4),
-                          handlePen=pg.mkPen((255, 0, 0,100), width=4))
+        cursorbutton = pg.RectROI(pos=[cursor.value(),1.5], size=[2.5, 0.5],centered=True,
+                          movable=False, resizable=False, removable=True,
+                          pen=pg.mkPen((255, 255, 0,0)),
+                          hoverPen=pg.mkPen((255, 0, 0,255), width=10))
+
+        cursorbutton.setAcceptedMouseButtons(QtCore.Qt.LeftButton)
         cursorbutton.sigClicked.connect(self.test_print)
         self.PlotTemporalWidget.addItem(cursorbutton)
+        self.cursor_list.append([cursor,cursorbutton])
 
 
 
@@ -177,8 +200,26 @@ class TemporalWidget():
 
     def __cursor_moved(self,cursor):
         cursor.label.setText("{:.1f}".format(cursor.value()))
+        _tmp = np.array(self.cursor_list)
+        idx = np.where(_tmp[:,0] == cursor)[0][0]
+        cursorbutton = self.cursor_list[idx][1]
+        cursorbutton.setPos(pos=(cursor.value(),1))
 
-    def test_print(self):
+
+    def test_print(self,cursorbutton):
+        print(self.cursor_list)
+        _tmp = np.array(self.cursor_list)
+        # print(_tmp)
+        # print(_tmp[:,0])
+        idx = np.where(_tmp[:,1] == cursorbutton)[0][0]
+        print(idx)
+        cursorbutton = self.cursor_list[idx][1]
+        cursor = self.cursor_list[idx][0]
+        del self.cursor_list[idx]
+        self.PlotTemporalWidget.removeItem(cursor)
+        self.PlotTemporalWidget.removeItem(cursorbutton)
+
+
         print('test_print')
 
 
