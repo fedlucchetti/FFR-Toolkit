@@ -63,7 +63,7 @@ class TemporalWidget():
             if sc=="Stimulus":c='g'
             elif sc[0]=="R ": c='r'
             elif sc[0]=="C ": c='b'
-            elif self.maingui.current_sc!=None and self.maingui.current_id==id: c = 'r'
+            elif self.maingui.current_sc!=None and self.maingui.current_id==str(id): c = 'r'
             else: c='w'
             self.plotitem.append(pg.PlotDataItem(self.const.t*1000,self.waveforms[:,id],pen=pg.mkPen(c, width=1)))
             self.PlotTemporalWidget.addItem(self.plotitem[id])
@@ -130,8 +130,9 @@ class TemporalWidget():
             else: pass
         print("select_waveform:  id:sc", id, sc)
         self.current_sc       = sc
-        self.maingui.current_id       = id
-        self.current_waveform,_ = self.workspace.get_waveform(id)
+        self.maingui.current_id = str(id)
+        self.current_waveform,_ = self.workspace.get_waveform(self.maingui.current_id)
+        self.workspace.onset,self.workspace.offset = self.workspace.get_on_offset()
         return sc
 
 

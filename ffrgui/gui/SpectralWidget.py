@@ -50,6 +50,7 @@ class SpectralWidget():
         try:
             self.add_iirfilter_button()
             self.add_deepfilter_button('Apply DeepFilter')
+            self.exit_button()
         except Exception as e:
             print('SpectralWidget initUI:', e)
             raise
@@ -84,6 +85,18 @@ class SpectralWidget():
             self.win.addItem(self.proxy,row=2,col=0)
         except:pass
             # raise
+
+    def exit_button(self):
+        _font = QtGui.QFont()
+        _font.setPointSize(18)
+        _font.setBold(True)
+        _font.setWeight(75)
+        proxy = QtGui.QGraphicsProxyWidget()
+        button = QtGui.QPushButton('Exit')
+        button.clicked.connect(lambda: self.win.destroy())
+        button.setFont(_font)
+        proxy.setWidget(button)
+        self.win.addItem(proxy,row=3,col=0)
 
     def btnstate(self):
         # print('btnstate: ',self.deepfilterbutton.isChecked())

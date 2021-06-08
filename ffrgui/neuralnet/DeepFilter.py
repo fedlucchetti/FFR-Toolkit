@@ -12,13 +12,16 @@ import numpy as np
 
 
 
-class DeepFilter():
-    def __init__(self):
+class DeepFilter(object):
+    def __init__(self,maingui):
         print("Initializing DeepFilter  Class with default parameters")
-        path2model = os.path.join(split(os.path.realpath(__file__))[0], "models", "EFR_Autoencoder.h5")
-        self.filtermodel = load_model(path2model,compile=False)
+        self.const = maingui.const
+        path2filtermodel = os.path.join(split(os.path.realpath(__file__))[0], "models", "EFR_Autoencoder.h5")
+        path2envelopmodel = os.path.join(split(os.path.realpath(__file__))[0], "models", "Envelope_model.h5")
+        self.filtermodel = load_model(path2filtermodel,compile=False)
+        self.envelopemodel = load_model(path2envelopmodel,compile=False)
         # self.filtermodel.summary()
-        self.fs          = 24414
+        self.fs          = self.const.fs
         self.Nt          = self.filtermodel.layers[0].input.shape[1]
 
 
@@ -41,6 +44,14 @@ class DeepFilter():
         filtered    = np.array(self.filtermodel.predict(waveform,batch_size=1)).astype('float')
         filtered    = np.reshape(filtered,[self.Nt])
         return (filtered*2-1)*scale
+
+    def get_envelope(self,waveform):
+        scale       = waveform.max()
+        waveform    = waveform/scale
+        waveform    = self.__reshape__(waveform)
+        filtered    = np.array(self.envelopemodel.predict(waveform,batch_size=1)).astype('float')
+        filtered    = np.reshape(filtered,[self.Nt])
+        return filtered
 
 
 if __name__ == "__main__":

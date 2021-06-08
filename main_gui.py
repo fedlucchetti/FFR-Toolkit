@@ -18,8 +18,9 @@ from PyQt5.QtCore import QEvent, QRect
 
 ######################
 from ffrgui.dsp       import Signal
-from ffrgui.gui       import PatientTable,SpectralWidget,TemporalWidget, FileDialog
+from ffrgui.gui       import PatientTable,SpectralWidget,TemporalWidget,LatencyPlotWidget, FileDialog
 from ffrgui.utilities import Workspace,FFR_Utils,DataBase, Constants
+from ffrgui.neuralnet import DeepFilter
 
 
 
@@ -42,7 +43,8 @@ class Ui_MainWindow(object):
         self.current_id    = 1
         ##############################
         self.const   = Constants.Constants()
-
+        ##############################
+        self.deepfilter = DeepFilter.DeepFilter(self)
         ##############################
         self.database  = DataBase.DataBase(self)
         self.database.load()
@@ -63,6 +65,8 @@ class Ui_MainWindow(object):
         self.roi_Filter     = self.spectralWidget.initUI()
         ###############################
         self.temporalWidget = TemporalWidget.TemporalWidget(self)
+        ###############################
+        self.latencyWidget = LatencyPlotWidget.LatencyPlotWidget(self)
         ###############################
         self.filedialog = FileDialog.FileDialog(self)
 
@@ -200,16 +204,14 @@ class Ui_MainWindow(object):
 
 
     def actions(self):
-        self.ButtonOpenDataBase.clicked.connect(  lambda : self.update_database_table()                                     )
-        self.ButtonRefresh.clicked.connect(           lambda : self.update_temporal_plot()                           )
-        self.table.tableWidget.clicked.connect(       lambda : self.update_temporal_plot())
+        self.ButtonOpenDataBase.clicked.connect(lambda : self.update_database_table())
+        self.ButtonRefresh.clicked.connect(lambda : self.update_temporal_plot())
+        self.table.tableWidget.clicked.connect( lambda : self.update_temporal_plot())
 
-        # self.ButtonAnalysis.clicked.connect(           lambda: self.update_tf_plot()                                  )
-        self.ButtonRefresh.clicked.connect(           lambda: self.workspace.init_workspace()                                  )
-        # self.ButtonAnalysis.clicked.connect(           lambda : self.update_widget_size(self.ButtonAnalysis.isChecked()))
+        self.ButtonRefresh.clicked.connect(lambda: self.workspace.init_workspace())
 
-        self.ButtonFFT.clicked.connect(               lambda: self.spectralWidget.initUI('load')                         )
-
+        self.ButtonFFT.clicked.connect(lambda: self.spectralWidget.initUI('load'))
+        self.ButtonAnalysis.clicked.connect(lambda: self.latencyWidget.initUI('load'))
 
         self.actionOpen_Workspace.triggered.connect(lambda: self.workspace.load())
         self.actionSave_Workspace.triggered.connect(lambda: self.workspace.save())
@@ -227,6 +229,7 @@ class Ui_MainWindow(object):
 
     def update_temporal_plot(self):
         self.temporalWidget.update()
+        self.latencyWidget.update()
 
 
 
