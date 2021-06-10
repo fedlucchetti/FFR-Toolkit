@@ -69,6 +69,7 @@ class Workspace(object):
     def get_sc_spectral(self,flag='original'):
         # print("ffr.py: current_json ",self.maingui.current_json)
         # print("ffr.py: current sc   ",self.maingui.current_sc)
+
         sig_waveform, noise_waveform = self.get_waveform(self.maingui.current_id,flag)
         sig_waveform   = np.absolute(np.fft.fft(sig_waveform))
 
@@ -86,10 +87,29 @@ class Workspace(object):
         self.current_workspace[self.maingui.current_id]["Data"]["original"]["analysis"]["Latency"] = self.onset
         self.current_workspace[self.maingui.current_id]["Data"]["original"]["analysis"]["Lenght"] = self.offset-self.onset
 
-    def get_on_offset(self):
-        onset  = float(self.current_workspace[self.maingui.current_id]["Data"]["original"]["analysis"]["Latency"])
-        offset = onset + float(self.current_workspace[self.maingui.current_id]["Data"]["original"]["analysis"]["Lenght"])
-        return onset, offset
+    def get_on_offset(self,id):
+        _x = self.current_workspace[id]["Data"]["original"]["analysis"]["Latency"]
+        try:
+            if isinstance(_x, str):
+                onset=float(_x.replace(',','.'))
+            else: onset =  _x
+        except Exception as e:
+            print("get_on_offset: first",e,"  _x",_x)
+            onset=-1
+        _x = self.current_workspace[id]["Data"]["original"]["analysis"]["Lenght"]
+        try:
+            if isinstance(_x, str):
+                offset = onset + float(_x.replace(',','.'))
+            else: offset = onset + _x
+        except Exception as e:
+            print("get_on_offset: second",e,"  _x",_x)
+            offset = -1
+
+
+        if onset < 5:
+            return -1,-1
+        else:
+            return onset, offset
 
 
     def load_AVGs(self):
@@ -114,6 +134,21 @@ class Workspace(object):
     def list(self):
         pass
 
+    def commit(self):
+        with open(self.maingui.current_json) as data_file: json_data = json.load(data_file)
+        for id, entry in enumerate(self.current_workspace):
+            label             = self.current_workspace[entry]["SC"]
+            channel,sc_string = self.database.get_channel_sc(label)
+            on,off = self.get_on_offset(id)
+            print("Replace in MetaAVG: ",json_data["FFR"][channel][sc_string]["Analysis"]["Latency"],"---->",on )
+            print("Replace in MetaAVG: ",json_data["FFR"][channel][sc_string]["Analysis"]["Lenght"],"---->",off-on )
+            json_data["FFR"][channel][sc_string]["Analysis"]["Latency"]=on
+            json_data["FFR"][channel][sc_string]["Analysis"]["Lenght"]=off
+
+
+
+
+
     def save(self):
         outjson = self.__serialize(self.current_workspace)
         self.filedialog = self.maingui.filedialog
@@ -131,7 +166,7 @@ class Workspace(object):
         self.maingui.update_temporal_plot()
 
     def __deserialize(self,datajson):
-        return {int(k):v for k,v in datajson.items()}
+        return {k:v for k,v in datajson.items()}
 
     def __serialize(self,datajson):
         return {str(k):v for k,v in datajson.items()}

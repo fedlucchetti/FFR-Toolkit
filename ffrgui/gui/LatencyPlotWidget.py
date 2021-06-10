@@ -89,6 +89,12 @@ class LatencyPlotWidget():
 
     def update(self):
         try:
+            if self.latencyPlot:pass
+            else: self.initUI()
+        except:
+            self.initUI()
+
+        try:
             self.latencyPlot.removeItem(self.signal)
             self.latencyPlot.removeItem(self.envelope1)
             self.latencyPlot.removeItem(self.envelope2)
@@ -152,7 +158,7 @@ class LatencyPlotWidget():
             xpos_onset  = np.random.randint(5,self.TMAX,1)[0]
             xpos_offset = xpos_onset+57
         elif flag=='load':
-            xpos_onset,xpos_offset  = self.workspace.get_on_offset()
+            xpos_onset,xpos_offset  = self.workspace.get_on_offset(self.maingui.current_id)
 
         _onsetcursor = pg.InfiniteLine(pos=xpos_onset,
                                  pen=pg.mkPen('g', width=4), markers = '<|>',

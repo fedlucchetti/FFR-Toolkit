@@ -40,7 +40,7 @@ class Ui_MainWindow(object):
         self.initSClist    = ['EFR V','EFR H','F1 V','F1 H','F2 V','F2 H','CDT V','CDT H','ABR V','ABR H',]
         self.current_json  = None
         self.current_sc    = 'EFR V'
-        self.current_id    = 1
+        self.current_id    = "1"
         ##############################
         self.const   = Constants.Constants()
         ##############################
@@ -127,7 +127,6 @@ class Ui_MainWindow(object):
         self.ButtonAnalysis.setGeometry(QtCore.QRect(30, 270, 221, 51))
         self.ButtonAnalysis.setFont(font)
         self.ButtonAnalysis.setObjectName("ButtonAnalysis")
-        self.ButtonAnalysis.setCheckable(True)
 
         self.ButtonRefresh = QtWidgets.QPushButton(self.ButtonWidget)
         self.ButtonRefresh.setGeometry(QtCore.QRect(30, 330, 221, 51))

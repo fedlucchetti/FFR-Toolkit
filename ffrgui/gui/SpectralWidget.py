@@ -21,29 +21,34 @@ class SpectralWidget():
 
     def __init__(self,maingui):
         super().__init__()
+        print("init SpectralWidget ")
         self.maingui = maingui
         self.sig = maingui.sig
         self.const = maingui.const
         self.workspace = maingui.workspace
         self.plot_style = pg.mkPen((255, 100, 0,255) ,width=2)
+        self.win = pg.GraphicsLayoutWidget(show=False, title="")
 
 
 
 
     def initUI(self,flag='new'):
         try:
-            if self.win:self.win.clear()
-        except: pass
-        self.win = pg.GraphicsLayoutWidget(show=True, title=self.maingui.current_sc)
+            if self.win:
+                self.win.clear()
+            else:
+                self.win = pg.GraphicsLayoutWidget(show=True, title=self.maingui.current_sc)
+        except Exception as e:
+            print('SpectralWidget initUI:', e)
+            self.win = pg.GraphicsLayoutWidget(show=True, title=self.maingui.current_sc)
         self.win.resize(1000,600)
         self.spectral = self.win.addPlot(title='')
-
         self.spectral.setXRange(0,4000)
 
         try:
             self.ymax=self.workspace.current_workspace[self.maingui.current_id]["Data"]["original"]["gui"]["ymax"]
         except:self.ymax=0
-        self.update_plot()
+        self.createPlot()
         self.roifilters=[]
         if flag=='load':
             self.__load_roi_from_workspace()
@@ -51,6 +56,7 @@ class SpectralWidget():
             self.add_iirfilter_button()
             self.add_deepfilter_button('Apply DeepFilter')
             self.exit_button()
+            self.update_button()
         except Exception as e:
             print('SpectralWidget initUI:', e)
             raise
@@ -61,12 +67,14 @@ class SpectralWidget():
         _font.setPointSize(18)
         _font.setBold(True)
         _font.setWeight(75)
-        proxy = QtGui.QGraphicsProxyWidget()
-        button = QtGui.QPushButton('Add IIR Filter')
-        button.clicked.connect(lambda: self.__add_iirfilter())
-        button.setFont(_font)
-        proxy.setWidget(button)
-        self.win.addItem(proxy,row=1,col=0)
+        self.proxy = QtGui.QGraphicsProxyWidget()
+        self.iirfilterbutton = QtGui.QPushButton('Add IIR Filter')
+        self.iirfilterbutton.clicked.connect(lambda: self.__add_iirfilter())
+        self.iirfilterbutton.setFont(_font)
+        self.proxy.setWidget(self.iirfilterbutton)
+        try:
+            self.win.addItem(self.proxy,row=1,col=0)
+        except Exception as e:print("add_iirfilter_button",e)
 
     def add_deepfilter_button(self,label):
         _font = QtGui.QFont()
@@ -83,8 +91,21 @@ class SpectralWidget():
         self.proxy.setWidget(self.deepfilterbutton)
         try:
             self.win.addItem(self.proxy,row=2,col=0)
-        except:pass
+        except Exception as e:print("add_deepfilter_button",e)
             # raise
+
+
+    def update_button(self):
+        _font = QtGui.QFont()
+        _font.setPointSize(18)
+        _font.setBold(True)
+        _font.setWeight(75)
+        proxy = QtGui.QGraphicsProxyWidget()
+        button = QtGui.QPushButton('Update')
+        button.clicked.connect(lambda: self.update())
+        button.setFont(_font)
+        proxy.setWidget(button)
+        self.win.addItem(proxy,row=3,col=0)
 
     def exit_button(self):
         _font = QtGui.QFont()
@@ -96,7 +117,7 @@ class SpectralWidget():
         button.clicked.connect(lambda: self.win.destroy())
         button.setFont(_font)
         proxy.setWidget(button)
-        self.win.addItem(proxy,row=3,col=0)
+        self.win.addItem(proxy,row=4,col=0)
 
     def btnstate(self):
         # print('btnstate: ',self.deepfilterbutton.isChecked())
@@ -106,23 +127,46 @@ class SpectralWidget():
             self.__remove_deepfilter()
 
 
-    def update_plot(self):
+    def update(self):
+        try:
+            if self.spectral:pass
+            else: self.initUI()
+        except:
+            self.initUI()
+        try:
+            self.spectral.removeItem(self.cursor)
+            self.spectral.removeItem(self.signal_spectra)
+            self.spectral.removeItem(self.noise_spectra)
+            self.spectral.removeItem(self.proxy)
+        except:pass
+        self.__add_cursor()
+        if len(self.workspace.get_filters())>0:flag='filtered'
+        else:flag='original'
+
+        sig_waveform, noise_waveform      = self.workspace.get_sc_spectral(flag)
+        self.sig_waveform,signal_f        = self.sig.smooth_plot(self.const.f,sig_waveform,window=91)
+        self.noise_waveform,noise_f       = self.sig.smooth_plot(self.const.f,noise_waveform,window=91)
+        self.signal_spectra = pg.PlotDataItem(signal_f,self.sig_waveform,pen=self.plot_style)
+
+
+        self.__addItem(self.signal_spectra)
+        self.noise_spectra = pg.PlotDataItem(noise_f,self.noise_waveform,fillLevel=0,brush=(255,0,0,80),fillOutline=False, width=0)
+        self.__addItem(self.noise_spectra)
+        self.spectral.showGrid(x=True, y=True)
+        self.spectral.update()
+
+
+
+    def createPlot(self):
 
         if self.maingui.current_json != None:
-            try:
-                self.spectral.removeItem(self.cursor)
-                self.spectral.removeItem(self.signal_spectra)
-                self.spectral.removeItem(self.noise_spectra)
-                self.spectral.removeItem(self.proxy)
-            except:pass
+            # try:
+            #     self.spectral.removeItem(self.cursor)
+            #     self.spectral.removeItem(self.signal_spectra)
+            #     self.spectral.removeItem(self.noise_spectra)
+            #     self.spectral.removeItem(self.proxy)
+            # except Exception as e:print("Spectral Widget: createPlot", e)
 
-            # try:
-            #     for item in self.roifilters:
-            #         self.specopyctral.removeItem(item)
-            # except:pass
-            # try:
-            #     self.__load_roi_from_workspace()
-            # except:pass
             self.__add_cursor()
             if len(self.workspace.get_filters())>0:flag='filtered'
             else:flag='original'
@@ -159,7 +203,9 @@ class SpectralWidget():
         try:
             if self.cursor_xpos:pass
             else:self.cursor_xpos=500
-        except:self.cursor_xpos=500
+        except Exception as e:
+            print("Spectral widget: __add_cursor",e)
+            self.cursor_xpos=500
         self.cursor = pg.InfiniteLine(pos=self.cursor_xpos,pen=pg.mkPen('y', width=4),\
                                 markers = '<|>',label=str(self.cursor_xpos) )
         self.cursor.setMovable(True)
@@ -205,12 +251,22 @@ class SpectralWidget():
                 elif type=='pass': color=pg.mkPen((0, 255, 0,100), width=4)
                 elif key =='42':
                     if value['enable']==1:
-                        self.add_deepfilter_button('Disable DeepFilter')
-                        # self.deepfilterbutton.setText('Disable DeepFilter')
+                        try:
+                            if self.deepfilterbutton:
+                                self.deepfilterbutton.setText('Disable DeepFilter')
+                            else:
+                                self.add_deepfilter_button('Disable DeepFilter')
+                        except:
+                            self.add_deepfilter_button('Disable DeepFilter')
                         self.plot_style = pg.mkPen((0, 100, 220,255) ,width=2)
                     elif value['enable']==0:
-                        self.add_deepfilter_button('Apply DeepFilter')
-                        # self.deepfilterbutton.setText('Apply DeepFilter')
+                        try:
+                            if self.deepfilterbutton:
+                                elf.deepfilterbutton.setText('Apply DeepFilter')
+                            else:
+                                self.add_deepfilter_button('Apply DeepFilter')
+                        except:
+                            self.add_deepfilter_button('DeepFilter DeepFilter')
                         self.plot_style = pg.mkPen((255, 100, 0,255) ,width=2)
                     continue
 
@@ -249,7 +305,7 @@ class SpectralWidget():
 
     def __apply_filter(self):
         self.sig.filter_current_waveform()
-        self.update_plot()
+        self.update()
         self.__list_all()
         self.maingui.update_temporal_plot()
 
@@ -261,13 +317,13 @@ class SpectralWidget():
         try:
             if -1 in self.workspace.current_workspace[self.maingui.current_id]["Filters"]:
                 del self.workspace.current_workspace[self.maingui.current_id]["Filters"][-1]
-        except: pass
+        except Exception as e:print("Spectral Widget: __add_iirfilter", e)
 
     def __add_deepfilter(self):
         new = {'42':{'state':{'pos':(0.0,0.0),'size':(0.0,0.0),'angle':(0.0)},'type':'autoencoder','enable':1}}
         self.workspace.current_workspace[self.maingui.current_id]["Filters"].update(new)
         self.plot_style = pg.mkPen((0, 80, 220,255) ,width=2)
-        self.update_plot()
+        self.update()
         self.deepfilterbutton.setText('Disable DeepFilter')
         self.__apply_filter()
 
@@ -277,7 +333,7 @@ class SpectralWidget():
         self.workspace.current_workspace[self.maingui.current_id]["Filters"].update(new)
         self.plot_style = pg.mkPen((255, 100, 0,255) ,width=2)
         self.__apply_filter()
-        self.update_plot()
+        self.update()
 
 
     def __switch_filter_type(self,roi):
@@ -312,7 +368,7 @@ class SpectralWidget():
     def __remove_roi_filter(self,roi):
         del self.workspace.current_workspace[self.maingui.current_id]["Filters"][str(roi)]
         self.spectral.removeItem(roi)
-        self.update_plot()
+        self.update()
 
 
     def __load_roi_from_workspace(self):

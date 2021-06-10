@@ -26,6 +26,7 @@ class TemporalWidget():
         self.plot_style = pg.mkPen((255, 100, 0,255) ,width=2)
         self.waveform_rois = []
         self.cursor_list       = []
+        self.on_markers,self.off_markers = [],[]
 
 
 
@@ -36,6 +37,11 @@ class TemporalWidget():
         self.PlotTemporalWidget.setObjectName("PlotTemporalWidget")
         # self.__add_cursor_button("Add cursor")
 
+
+
+
+
+
     def update(self,arg=None):
         waveforms, self.sc_list = self.workspace.load_AVGs()
 
@@ -43,6 +49,8 @@ class TemporalWidget():
         try:
             for item in self.plotitem:
                 self.PlotTemporalWidget.removeItem(item)
+            self.PlotTemporalWidget.removeItem(self.envelope_up)
+            # self.PlotTemporalWidget.removeItem(self.envelope_do)
         except:pass
         try:
             for item in self.labellist:
@@ -52,8 +60,17 @@ class TemporalWidget():
             for item in self.waveform_rois:
                 self.PlotTemporalWidget.removeItem(item)
         except Exception as e:print(e)
+        try:
+            for item in self.on_markers:
+                self.PlotTemporalWidget.removeItem(item)
+        except Exception as e:print(e)
+        try:
+            for item in self.off_markers:
+                self.PlotTemporalWidget.removeItem(item)
+        except Exception as e:print(e)
         self.plotitem = []
         self.labellist = []
+        self.on_markers,self.off_markers = [],[]
         waveforms, scale_factor = self.sig.normalize_waveforms(waveforms)
         # waveforms               = self.sig.order_waveforms(waveforms,self.initSClist)
         self.waveforms       = self.sig.offset_waveforms(waveforms)
@@ -63,7 +80,15 @@ class TemporalWidget():
             if sc=="Stimulus":c='g'
             elif sc[0]=="R ": c='r'
             elif sc[0]=="C ": c='b'
-            elif self.maingui.current_sc!=None and self.maingui.current_id==str(id): c = 'r'
+            elif self.maingui.current_sc!=None and self.maingui.current_id==str(id):
+                dc = np.mean(self.waveforms[:,id])
+                envelope=self.sig.get_envelope(self.waveforms[:,id]-dc)+dc
+                # self.deepfilter.get_envelope(waveform-dc)+dc
+                self.envelope_up = pg.PlotDataItem(self.const.t*1000,envelope,pen=pg.mkPen('b', width=1))
+                # self.envelope_do = pg.PlotDataItem(self.const.t*1000,-((envelope-np.mean(envelope))+np.mean(self.waveforms[:,id])),pen=pg.mkPen('b', width=1))
+                self.PlotTemporalWidget.addItem(self.envelope_up)
+                # self.PlotTemporalWidget.addItem(self.envelope_do)
+                c = 'r'
             else: c='w'
             self.plotitem.append(pg.PlotDataItem(self.const.t*1000,self.waveforms[:,id],pen=pg.mkPen(c, width=1)))
             self.PlotTemporalWidget.addItem(self.plotitem[id])
@@ -72,6 +97,16 @@ class TemporalWidget():
             self.labellist.append(label)
             # label.setTextWidth(10)
             self.PlotTemporalWidget.addItem(self.labellist[id])
+            on, off = self.workspace.get_on_offset(str(id))
+            _onmarker  = pg.PlotDataItem([on,on],[np.mean(self.waveforms[:,id]),np.max(self.waveforms[:,id])],pen=pg.mkPen('y', width=2))
+            _offmarker = pg.PlotDataItem([off,off],[np.mean(self.waveforms[:,id]),np.max(self.waveforms[:,id])],pen=pg.mkPen('y', width=2))
+            self.on_markers.append(_onmarker)
+            self.off_markers.append(_offmarker)
+            self.PlotTemporalWidget.addItem(self.on_markers[id])
+            self.PlotTemporalWidget.addItem(self.off_markers[id])
+
+
+
 
 
         self.PlotTemporalWidget.setLimits(xMin=0,yMin=self.waveforms[:,-1].min(),yMax=2,xMax=1.1*self.const.t.max()*1000)
@@ -129,10 +164,13 @@ class TemporalWidget():
                 break
             else: pass
         print("select_waveform:  id:sc", id, sc)
+        on, off = self.workspace.get_on_offset(str(id))
+        print("select_waveform:  on:", on,"  off", off)
+
         self.current_sc       = sc
         self.maingui.current_id = str(id)
         self.current_waveform,_ = self.workspace.get_waveform(self.maingui.current_id)
-        self.workspace.onset,self.workspace.offset = self.workspace.get_on_offset()
+        self.workspace.onset,self.workspace.offset = self.workspace.get_on_offset(self.maingui.current_id)
         return sc
 
 
@@ -178,7 +216,6 @@ class TemporalWidget():
         cursor.label.setColor(pg.mkColor((255, 200, 0,255)))
         cursor.label.setFont(QFont("Times", 20, QFont.Bold))
         cursor.sigDragged.connect(self.__cursor_moved)
-        # cursor.sigClicked.connect(self.test_print)
         self.PlotTemporalWidget.addItem(cursor)
 
         cursorbutton = pg.RectROI(pos=[cursor.value(),1.5], size=[2.5, 0.5],centered=True,
@@ -187,17 +224,11 @@ class TemporalWidget():
                           hoverPen=pg.mkPen((255, 0, 0,255), width=10))
 
         cursorbutton.setAcceptedMouseButtons(QtCore.Qt.LeftButton)
-        cursorbutton.sigClicked.connect(self.test_print)
+        cursorbutton.sigClicked.connect(self.delete_cursor)
         self.PlotTemporalWidget.addItem(cursorbutton)
         self.cursor_list.append([cursor,cursorbutton])
 
 
-
-    def __remove_cursor(self):
-        self.PlotTemporalWidget.removeItem(roi)
-
-    # def __add_target_label(self,cursor):
-    #     label = pg.TargetItem(pos=(cursor.value(),0),size=20,label=str(cursor.value()))
 
     def __cursor_moved(self,cursor):
         cursor.label.setText("{:.1f}".format(cursor.value()))
@@ -207,11 +238,9 @@ class TemporalWidget():
         cursorbutton.setPos(pos=(cursor.value(),1))
 
 
-    def test_print(self,cursorbutton):
+    def delete_cursor(self,cursorbutton):
         print(self.cursor_list)
         _tmp = np.array(self.cursor_list)
-        # print(_tmp)
-        # print(_tmp[:,0])
         idx = np.where(_tmp[:,1] == cursorbutton)[0][0]
         print(idx)
         cursorbutton = self.cursor_list[idx][1]
@@ -219,30 +248,6 @@ class TemporalWidget():
         del self.cursor_list[idx]
         self.PlotTemporalWidget.removeItem(cursor)
         self.PlotTemporalWidget.removeItem(cursorbutton)
-
-
-        print('test_print')
-
-
-    def update_tf_plot(self):
-        print('latency clicked')
-        self.PlotTemporalWidget.clear()
-        plotitem     = pg.PlotDataItem(self.const.t*1000,self.maingui.current_waveform/np.max(self.maingui.current_waveform),pen=pg.mkPen('g', width=1))
-        self.PlotTemporalWidget.addItem(plotitem)
-
-        analytic_signal   = signal.hilbert(self.maingui.current_waveform)
-        self.IAmplitude   = np.abs(analytic_signal)
-        self.IAmplitude   = self.IAmplitude/np.max(self.IAmplitude)-2
-        plotitem     = pg.PlotDataItem(self.const.t*1000,self.IAmplitude,pen=pg.mkPen('r', width=1))
-        self.PlotTemporalWidget.addItem(plotitem)
-
-        self.IPhase       = np.unwrap(np.angle(analytic_signal))
-        self.DeltaPhase   = np.abs(self.IPhase - 2*np.pi*self.database.get_frequency(self.maingui.current_sc)*self.const.t)
-        self.DeltaPhase   = self.DeltaPhase/np.max(self.DeltaPhase)-4
-        plotitem     = pg.PlotDataItem(self.const.t*1000,self.DeltaPhase ,pen=pg.mkPen('b', width=1))
-        self.PlotTemporalWidget.addItem(plotitem)
-
-
 
 
 

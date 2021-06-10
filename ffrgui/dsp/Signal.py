@@ -73,6 +73,7 @@ class Signal(object):
 
 
     def get_envelope(self,waveform):
+        # dc = np.mean(waveform)
         return self.deepfilter.get_envelope(waveform)
 
 
