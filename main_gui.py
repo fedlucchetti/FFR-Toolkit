@@ -120,18 +120,23 @@ class Ui_MainWindow(object):
 
 
         self.ButtonFFT = QtWidgets.QPushButton(self.ButtonWidget)
-        self.ButtonFFT.setGeometry(QtCore.QRect(30, 200, 221, 51))
+        self.ButtonFFT.setGeometry(QtCore.QRect(30, 100, 221, 51))
         self.ButtonFFT.setFont(font)
         self.ButtonFFT.setObjectName("ButtonFFT")
         self.ButtonAnalysis = QtWidgets.QPushButton(self.ButtonWidget)
-        self.ButtonAnalysis.setGeometry(QtCore.QRect(30, 270, 221, 51))
+        self.ButtonAnalysis.setGeometry(QtCore.QRect(30, 170, 221, 51))
         self.ButtonAnalysis.setFont(font)
         self.ButtonAnalysis.setObjectName("ButtonAnalysis")
 
         self.ButtonRefresh = QtWidgets.QPushButton(self.ButtonWidget)
-        self.ButtonRefresh.setGeometry(QtCore.QRect(30, 330, 221, 51))
+        self.ButtonRefresh.setGeometry(QtCore.QRect(30, 240, 221, 51))
         self.ButtonRefresh.setFont(font)
         self.ButtonRefresh.setObjectName("ButtonRefresh")
+
+        self.ButtonCommit = QtWidgets.QPushButton(self.ButtonWidget)
+        self.ButtonCommit.setGeometry(QtCore.QRect(30, 310, 221, 51))
+        self.ButtonCommit.setFont(font)
+        self.ButtonCommit.setObjectName("ButtonCommit")
 
         self.TemporalWidgetContainer = QtWidgets.QWidget(self.centralwidget)
         self.TemporalWidgetContainer.setGeometry(QtCore.QRect(300, 110, 1481, 1200))
@@ -205,6 +210,7 @@ class Ui_MainWindow(object):
     def actions(self):
         self.ButtonOpenDataBase.clicked.connect(lambda : self.update_database_table())
         self.ButtonRefresh.clicked.connect(lambda : self.update_temporal_plot())
+        self.ButtonCommit.clicked.connect(lambda : self.workspace.commit())
         self.table.tableWidget.clicked.connect( lambda : self.update_temporal_plot())
 
         self.ButtonRefresh.clicked.connect(lambda: self.workspace.init_workspace())
@@ -252,6 +258,7 @@ class Ui_MainWindow(object):
         self.ButtonOpenDataBase.setText(_translate("MainWindow", "Open Database"))
         self.ButtonAnalysis.setText(_translate("MainWindow", "Analysis"))
         self.ButtonFFT.setText(_translate("MainWindow", "Spectral"))
+        self.ButtonCommit.setText(_translate("MainWindow", "Commit"))
 
 
         self.menuFile.setTitle(_translate("MainWindow", "File"))

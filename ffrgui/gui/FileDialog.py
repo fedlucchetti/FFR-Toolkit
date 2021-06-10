@@ -1,5 +1,6 @@
 import sys, os, json
-from PyQt5.QtWidgets import  QWidget,  QFileDialog
+from PyQt5.QtWidgets import  QWidget,  QFileDialog, QMessageBox, QPushButton
+
 
 class FileDialog(QWidget):
 
@@ -45,3 +46,24 @@ class FileDialog(QWidget):
         # self.show()
         if fileName:
             return fileName
+
+    def showdialog(self,message):
+        msg = QMessageBox()
+        msg.setIcon(QMessageBox.Information)
+
+        msg.setText("Changes will be made to the data base")
+        msg.setInformativeText("")
+        msg.setWindowTitle("User action required")
+        msg.setDetailedText(message)
+        msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+        msg.buttonClicked.connect(self.msgbtn)
+        msg.setFixedSize(640, 480)
+
+        retval = msg.exec_()
+        print("value of pressed message box button:", retval)
+        if retval==1024: return 1
+        elif retval==4194304: return 0
+        else: return 0
+
+    def msgbtn(self,i):
+        print("Button pressed is:",i.text())

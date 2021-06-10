@@ -88,6 +88,7 @@ class Workspace(object):
         self.current_workspace[self.maingui.current_id]["Data"]["original"]["analysis"]["Lenght"] = self.offset-self.onset
 
     def get_on_offset(self,id):
+        id=str(id)
         _x = self.current_workspace[id]["Data"]["original"]["analysis"]["Latency"]
         try:
             if isinstance(_x, str):
@@ -135,16 +136,25 @@ class Workspace(object):
         pass
 
     def commit(self):
+        self.filedialog = self.maingui.filedialog
+        message = "\n"
         with open(self.maingui.current_json) as data_file: json_data = json.load(data_file)
         for id, entry in enumerate(self.current_workspace):
             label             = self.current_workspace[entry]["SC"]
             channel,sc_string = self.database.get_channel_sc(label)
             on,off = self.get_on_offset(id)
-            print("Replace in MetaAVG: ",json_data["FFR"][channel][sc_string]["Analysis"]["Latency"],"---->",on )
-            print("Replace in MetaAVG: ",json_data["FFR"][channel][sc_string]["Analysis"]["Lenght"],"---->",off-on )
-            json_data["FFR"][channel][sc_string]["Analysis"]["Latency"]=on
-            json_data["FFR"][channel][sc_string]["Analysis"]["Lenght"]=off
-
+            # print("Replace in MetaAVG: ",json_data["FFR"][channel][sc_string]["Analysis"]["Latency"],"---->",str(on) )
+            # print("Replace in MetaAVG: ",json_data["FFR"][channel][sc_string]["Analysis"]["Lenght"],"---->",str(off-on) )
+            message = message + sc_string+" "+channel+"\n"
+            message = message + " onset :  " + str(json_data["FFR"][channel][sc_string]["Analysis"]["Latency"]) + "---->"+str(on)+"\n"
+            message = message +   " length:  " + str(json_data["FFR"][channel][sc_string]["Analysis"]["Lenght"]) + "---->" +str(off-on) +"\n"+"\n"
+            json_data["FFR"][channel][sc_string]["Analysis"]["Latency"]= on
+            json_data["FFR"][channel][sc_string]["Analysis"]["Lenght"] = off-on
+        out=self.filedialog.showdialog(message)
+        if out:
+            with open(self.maingui.current_json, 'w') as outfile:
+                json.dump(json_data, outfile)
+            print("Changes written to file", self.maingui.current_json)
 
 
 
