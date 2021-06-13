@@ -1,0 +1,20 @@
+{
+    "font_size": {
+        "ticks": 12,
+        "axes": 14,
+        "text": 10,
+        "y_unit": 14,
+        "title": 20
+    },
+    "color": {
+        "R": "r",
+        "C": "b",
+        "V": "k",
+        "H": "tab:gray",
+        "Noise":"tab:gray",
+        "scale":"k"
+    },
+    "width": {
+        "line": 1
+    }   
+}

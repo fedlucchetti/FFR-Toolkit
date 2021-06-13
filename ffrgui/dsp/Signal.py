@@ -3,7 +3,6 @@
 import sys
 import numpy as np
 from scipy import signal
-from ffrgui.neuralnet import DeepFilter
 
 
 
@@ -13,7 +12,7 @@ class Signal(object):
         self.maingui = maingui
         self.const = maingui.const
         self.workspace = maingui.workspace
-        self.deepfilter = DeepFilter.DeepFilter()
+        self.deepfilter = maingui.deepfilter
 
     def normalize_waveforms(self,waveforms):
         n_sc     = 0
@@ -73,6 +72,9 @@ class Signal(object):
         return sel_waveforms
 
 
+    def get_envelope(self,waveform):
+        # dc = np.mean(waveform)
+        return self.deepfilter.get_envelope(waveform)
 
 
     def offset_waveforms(self,waveforms):

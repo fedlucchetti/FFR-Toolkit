@@ -189,7 +189,12 @@ class DataBase(object):
 
     def load_Analysis(self,json_data,ch,sc):
         analysis=json_data["FFR"][ch][sc]["Analysis"]
+        # print("load_Analysis", analysis)
         return analysis
+
+
+
+
 
 
 
