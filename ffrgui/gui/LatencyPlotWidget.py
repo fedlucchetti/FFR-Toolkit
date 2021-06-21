@@ -68,11 +68,18 @@ class LatencyPlotWidget():
         _font.setBold(True)
         _font.setWeight(75)
         proxy = QtGui.QGraphicsProxyWidget()
-        button = QtGui.QPushButton('Add phase shift')
-        # button.clicked.connect(lambda: pass)
-        button.setFont(_font)
-        proxy.setWidget(button)
+        self.phasediffbutton = QtGui.QPushButton('Add phase shift')
+        self.phasediffbutton.setCheckable(True)
+        self.phasediffbutton.clicked.connect(lambda: self.pd_btnstate()) #show and hide phase difference
+        self.phasediffbutton.setFont(_font)
+        proxy.setWidget(self.phasediffbutton)
         self.win.addItem(proxy,row=2,col=0)
+
+    def pd_btnstate(self):
+        if  self.phasediffbutton.isChecked():
+            self.latencyPlot.addItem(self.phasediff)
+        else:
+            self.latencyPlot.removeItem(self.phasediff)
 
     def exit_button(self):
         _font = QtGui.QFont()
@@ -102,9 +109,11 @@ class LatencyPlotWidget():
         except:pass
         sig_waveform, _      = self.workspace.get_waveform(self.maingui.current_id,flag='filtered')
         envelope = self.sig.get_envelope(sig_waveform)
+        phase_diff = self.sig.get_phase_diff(sig_waveform)
         self.signal = pg.PlotDataItem(self.const.t*1000,sig_waveform/max(sig_waveform),pen=pg.mkPen('w', width=2))
         self.envelope1 = pg.PlotDataItem(self.const.t*1000,envelope,pen=pg.mkPen('b', width=2))
         self.envelope2 = pg.PlotDataItem(self.const.t*1000,-envelope,pen=pg.mkPen('b', width=2))
+        self.phasediff = pg.PlotDataItem(self.const.t*1000,phase_diff,pen=pg.mkPen('g', width=2))
         self.latencyPlot.addItem(self.signal)
         self.latencyPlot.addItem(self.envelope1)
         self.latencyPlot.addItem(self.envelope2)
@@ -120,9 +129,11 @@ class LatencyPlotWidget():
 
         sig_waveform, _      = self.workspace.get_waveform(self.maingui.current_id,flag='filtered')
         envelope = self.sig.get_envelope(sig_waveform)
+        phase_diff = self.sig.get_phase_diff(sig_waveform)
         self.signal = pg.PlotDataItem(self.const.t*1000,sig_waveform/max(sig_waveform),pen=pg.mkPen('w', width=2))
         self.envelope1 = pg.PlotDataItem(self.const.t*1000,envelope,pen=pg.mkPen('b', width=2))
         self.envelope2 = pg.PlotDataItem(self.const.t*1000,-envelope,pen=pg.mkPen('b', width=2))
+        self.phasediff = pg.PlotDataItem(self.const.t*1000,phase_diff,pen=pg.mkPen('g', width=2))
 
         self.latencyPlot.addItem(self.signal)
         self.latencyPlot.addItem(self.envelope1)

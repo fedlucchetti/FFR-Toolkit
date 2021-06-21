@@ -65,6 +65,7 @@ class Ui_MainWindow(object):
         self.roi_Filter     = self.spectralWidget.initUI()
         ###############################
         self.temporalWidget = TemporalWidget.TemporalWidget(self)
+        self.temporalWidget.current_sc = self.current_sc
         ###############################
         self.latencyWidget = LatencyPlotWidget.LatencyPlotWidget(self)
         ###############################
