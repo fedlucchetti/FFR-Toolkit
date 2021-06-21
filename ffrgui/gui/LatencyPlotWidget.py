@@ -69,7 +69,7 @@ class LatencyPlotWidget():
         _font.setWeight(75)
         proxy = QtGui.QGraphicsProxyWidget()
         button = QtGui.QPushButton('Add phase shift')
-        # button.clicked.connect(lambda: pass)
+        button.clicked.connect(lambda: self.__add_on_offset_cursors("phaseshift"))
         button.setFont(_font)
         proxy.setWidget(button)
         self.win.addItem(proxy,row=2,col=0)
@@ -98,6 +98,7 @@ class LatencyPlotWidget():
             self.latencyPlot.removeItem(self.signal)
             self.latencyPlot.removeItem(self.envelope1)
             self.latencyPlot.removeItem(self.envelope2)
+            self.latencyPlot.removeItem(self.phase)
             # self.latencyPlot.removeItem(self.proxy)
         except:pass
         sig_waveform, _      = self.workspace.get_waveform(self.maingui.current_id,flag='filtered')
@@ -105,9 +106,11 @@ class LatencyPlotWidget():
         self.signal = pg.PlotDataItem(self.const.t*1000,sig_waveform/max(sig_waveform),pen=pg.mkPen('w', width=2))
         self.envelope1 = pg.PlotDataItem(self.const.t*1000,envelope,pen=pg.mkPen('b', width=2))
         self.envelope2 = pg.PlotDataItem(self.const.t*1000,-envelope,pen=pg.mkPen('b', width=2))
+        self.phase     = pg.PlotDataItem(self.const.t*1000,sig_waveform/max(sig_waveform)-3,pen=pg.mkPen('g', width=2))
         self.latencyPlot.addItem(self.signal)
         self.latencyPlot.addItem(self.envelope1)
         self.latencyPlot.addItem(self.envelope2)
+        self.latencyPlot.addItem(self.phase)
         self.latencyPlot.update()
 
     def createPlot(self):
@@ -123,10 +126,11 @@ class LatencyPlotWidget():
         self.signal = pg.PlotDataItem(self.const.t*1000,sig_waveform/max(sig_waveform),pen=pg.mkPen('w', width=2))
         self.envelope1 = pg.PlotDataItem(self.const.t*1000,envelope,pen=pg.mkPen('b', width=2))
         self.envelope2 = pg.PlotDataItem(self.const.t*1000,-envelope,pen=pg.mkPen('b', width=2))
-
+        self.phase     = pg.PlotDataItem(self.const.t*1000,sig_waveform/max(sig_waveform)-3,pen=pg.mkPen('g', width=2))
         self.latencyPlot.addItem(self.signal)
         self.latencyPlot.addItem(self.envelope1)
         self.latencyPlot.addItem(self.envelope2)
+        self.latencyPlot.addItem(self.phase)
         self.latencyPlot.showGrid(x=True, y=True)
         self.latencyPlot.setLabel('left', "Amplitude [nV]")
         self.latencyPlot.setLabel('bottom', "Time [ms]",fontsize=20)
@@ -136,7 +140,7 @@ class LatencyPlotWidget():
         self.latencyPlot.getAxis("left").tickFont = font
         self.latencyPlot.getAxis("bottom").tickFont = font
         self.latencyPlot.setXRange(0,self.TMAX, padding=0)
-        self.latencyPlot.setYRange(-1.4,1.4, padding=0)
+        self.latencyPlot.setYRange(-5.4,1.4, padding=0)
         self.latencyPlot.setLimits(xMin=0,xMax=self.TMAX,yMin=-1.4,yMax=1.4)
         self.latencyPlot.update()
 
@@ -151,17 +155,27 @@ class LatencyPlotWidget():
             self.workspace.offset = float(cursor.value())
         cursor.label.setText("{:.1f}".format(cursor.value()))
 
+
+
+
     def __add_on_offset_cursors(self,flag):
         if flag=='new':
             xpos_onset,xpos_offset  = 5, 62
+            on_color = pg.mkPen((0, 255, 0,255))
+            off_color = pg.mkPen((255, 0, 0,255))
         elif flag=="phaseshift":
             xpos_onset  = np.random.randint(5,self.TMAX,1)[0]
             xpos_offset = xpos_onset+57
+            on_color = pg.mkPen((255, 255, 0,255))
+            off_color = pg.mkPen((255, 255, 0,255))
+
         elif flag=='load':
             xpos_onset,xpos_offset  = self.workspace.get_on_offset(self.maingui.current_id)
+            on_color = pg.mkPen((0, 255, 0,255))
+            off_color = pg.mkPen((255, 0, 0,255))
 
         _onsetcursor = pg.InfiniteLine(pos=xpos_onset,
-                                 pen=pg.mkPen('g', width=4), markers = '<|>',
+                                 pen=on_color, markers = '<|>',
                                  hoverPen=pg.mkPen((0, 255, 0,255), width=10),
                                  label=str(5),bounds=[0,max(self.const.t)*1000],
                                  name="onsetCursor",movable=True)
@@ -173,7 +187,7 @@ class LatencyPlotWidget():
         _onsetcursor.sigDragged.connect(self.__cursor_moved)
 
         _offsetcursor = pg.InfiniteLine(pos=xpos_offset,
-                                 pen=pg.mkPen('r', width=4), markers = '<|>',
+                                 pen=off_color, markers = '<|>',
                                  hoverPen=pg.mkPen((255, 0, 0,255), width=10),
                                  label=str(5),bounds=[0,max(self.const.t)*1000],
                                  name="offsetCursor",movable=True)
@@ -182,8 +196,8 @@ class LatencyPlotWidget():
         _offsetcursor.label.setColor(pg.mkColor((255, 200, 0,255)))
         _offsetcursor.label.setFont(QFont("Times", 20, QFont.Bold))
         _offsetcursor.label.setText("{:.1f}".format(_offsetcursor.value()))
-        _offsetcursor.sigDragged.connect(self.__cursor_moved)
 
+        _offsetcursor.sigDragged.connect(self.__cursor_moved)
         self._onsetcursor, self._offsetcursor = _onsetcursor, _offsetcursor
         self.latencyPlot.addItem(self._onsetcursor)
         self.latencyPlot.addItem(self._offsetcursor)

@@ -84,7 +84,7 @@ class TemporalWidget():
                 dc = np.mean(self.waveforms[:,id])
                 envelope=self.sig.get_envelope(self.waveforms[:,id]-dc)+dc
                 # self.deepfilter.get_envelope(waveform-dc)+dc
-                self.envelope_up = pg.PlotDataItem(self.const.t*1000,envelope,pen=pg.mkPen('b', width=1))
+                self.envelope_up = pg.PlotDataItem(self.const.t*1000,envelope,pen=pg.mkPen((0, 150, 255,255), width=1))
                 # self.envelope_do = pg.PlotDataItem(self.const.t*1000,-((envelope-np.mean(envelope))+np.mean(self.waveforms[:,id])),pen=pg.mkPen('b', width=1))
                 self.PlotTemporalWidget.addItem(self.envelope_up)
                 # self.PlotTemporalWidget.addItem(self.envelope_do)
@@ -98,8 +98,8 @@ class TemporalWidget():
             # label.setTextWidth(10)
             self.PlotTemporalWidget.addItem(self.labellist[id])
             on, off = self.workspace.get_on_offset(str(id))
-            _onmarker  = pg.PlotDataItem([on,on],[np.mean(self.waveforms[:,id]),np.max(self.waveforms[:,id])],pen=pg.mkPen('y', width=2))
-            _offmarker = pg.PlotDataItem([off,off],[np.mean(self.waveforms[:,id]),np.max(self.waveforms[:,id])],pen=pg.mkPen('y', width=2))
+            _onmarker  = pg.PlotDataItem([on,on],[np.mean(self.waveforms[:,id]),np.max(self.waveforms[:,id])],pen=pg.mkPen('g', width=2))
+            _offmarker = pg.PlotDataItem([off,off],[np.mean(self.waveforms[:,id]),np.max(self.waveforms[:,id])],pen=pg.mkPen((255, 150, 0,255), width=2))
             self.on_markers.append(_onmarker)
             self.off_markers.append(_offmarker)
             self.PlotTemporalWidget.addItem(self.on_markers[id])
