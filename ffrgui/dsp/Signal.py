@@ -77,8 +77,10 @@ class Signal(object):
         return self.deepfilter.get_envelope(waveform)
 
     def get_diffenvelope(self,waveform):
+        # TO DO #
+        pass
         # dc = np.mean(waveform)
-        return self.deepfilter.get_diffphase(waveform)
+        # return self.deepfilter.get_diffphase(waveform)
 
 
     def offset_waveforms(self,waveforms):

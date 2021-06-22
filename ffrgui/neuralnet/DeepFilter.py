@@ -21,7 +21,7 @@ class DeepFilter(object):
         # path2phase_model    = os.path.join(split(os.path.realpath(__file__))[0], "models", "Phase_model.h5")
         self.filtermodel = load_model(path2filter_model,compile=False)
         self.envelopemodel = load_model(path2envelope_model,compile=False)
-        self.phasemodel = load_model(path2phase_model,compile=False)
+        # self.phasemodel = load_model(path2phase_model,compile=False)
         # self.filtermodel.summary()
         self.fs          = self.const.fs
         self.Nt          = self.filtermodel.layers[0].input.shape[1]
@@ -57,10 +57,11 @@ class DeepFilter(object):
 
     def get_diffphase(self,waveform):
         scale       = waveform.max()
-        waveform    = waveform/scale
-        waveform    = self.__reshape__(waveform)
-        filtered    = np.array(self.phasemodel.predict(waveform,batch_size=1)).astype('float')
-        filtered    = np.reshape(filtered,[self.Nt])
+        filtered    = np.zeros(waveform.shape)
+        # waveform    = waveform/scale
+        # waveform    = self.__reshape__(waveform)
+        # filtered    = np.array(self.phasemodel.predict(waveform,batch_size=1)).astype('float')
+        # filtered    = np.reshape(filtered,[self.Nt])
         return filtered
 
 
