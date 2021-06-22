@@ -106,7 +106,7 @@ class LatencyPlotWidget():
         self.signal = pg.PlotDataItem(self.const.t*1000,sig_waveform/max(sig_waveform),pen=pg.mkPen('w', width=2))
         self.envelope1 = pg.PlotDataItem(self.const.t*1000,envelope,pen=pg.mkPen('b', width=2))
         self.envelope2 = pg.PlotDataItem(self.const.t*1000,-envelope,pen=pg.mkPen('b', width=2))
-        self.phase     = pg.PlotDataItem(self.const.t*1000,sig_waveform/max(sig_waveform)-3,pen=pg.mkPen('g', width=2))
+        self.phase     = pg.PlotDataItem(self.const.t*1000,self.sig.get_diffenvelope(sig_waveform),pen=pg.mkPen('g', width=2))
         self.latencyPlot.addItem(self.signal)
         self.latencyPlot.addItem(self.envelope1)
         self.latencyPlot.addItem(self.envelope2)
@@ -126,7 +126,7 @@ class LatencyPlotWidget():
         self.signal = pg.PlotDataItem(self.const.t*1000,sig_waveform/max(sig_waveform),pen=pg.mkPen('w', width=2))
         self.envelope1 = pg.PlotDataItem(self.const.t*1000,envelope,pen=pg.mkPen('b', width=2))
         self.envelope2 = pg.PlotDataItem(self.const.t*1000,-envelope,pen=pg.mkPen('b', width=2))
-        self.phase     = pg.PlotDataItem(self.const.t*1000,sig_waveform/max(sig_waveform)-3,pen=pg.mkPen('g', width=2))
+        self.phase     = pg.PlotDataItem(self.const.t*1000,self.sig.get_diffenvelope(sig_waveform),pen=pg.mkPen('g', width=2))
         self.latencyPlot.addItem(self.signal)
         self.latencyPlot.addItem(self.envelope1)
         self.latencyPlot.addItem(self.envelope2)
@@ -140,7 +140,7 @@ class LatencyPlotWidget():
         self.latencyPlot.getAxis("left").tickFont = font
         self.latencyPlot.getAxis("bottom").tickFont = font
         self.latencyPlot.setXRange(0,self.TMAX, padding=0)
-        self.latencyPlot.setYRange(-5.4,1.4, padding=0)
+        self.latencyPlot.setYRange(-1.4,1.4, padding=0)
         self.latencyPlot.setLimits(xMin=0,xMax=self.TMAX,yMin=-1.4,yMax=1.4)
         self.latencyPlot.update()
 

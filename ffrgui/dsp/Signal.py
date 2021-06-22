@@ -78,9 +78,18 @@ class Signal(object):
 
     def get_diffenvelope(self,waveform):
         # TO DO #
-        pass
         # dc = np.mean(waveform)
         # return self.deepfilter.get_diffphase(waveform)
+        _sc        = self.maingui.temporalWidget.current_sc.split(' ')[0]
+        f_sc       = self.maingui.database.get_frequency(_sc)
+        ip_wav     = np.unwrap(np.angle(signal.hilbert(waveform)))
+        y          = np.sin(2 * np.pi * f_sc * np.arange(self.const.Nt) / self.const.fs)
+        ip_sin     = np.unwrap(np.angle(signal.hilbert(y)))
+        phase_diff = np.abs(ip_wav - ip_sin)
+        scale      = phase_diff.max()
+        phase_diff = phase_diff/scale
+
+        return phase_diff
 
 
     def offset_waveforms(self,waveforms):
