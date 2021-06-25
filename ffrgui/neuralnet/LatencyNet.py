@@ -17,8 +17,10 @@ class LatencyNet(object):
     def __init__(self,maingui):
         print("Initializing LatencyNet  Class with default parameters")
         self.const = maingui.const
+        self.deepfilter = maingui.deepfilter
         path2latency_model = os.path.join(split(os.path.realpath(__file__))[0], "models", "LatencyNetwork.h5")
         self.latencymodel  = load_model(path2latency_model,compile=False)
+
         self.fs            = self.const.fs
         self.Nt            = self.const.Nt
         self.dt            = self.const.dt
@@ -45,6 +47,7 @@ class LatencyNet(object):
 
     def get(self,waveform,threshold=0.95):
         ongate           = np.zeros([self.Nt])
+        waveform         = self.deepfilter.apply_filter(waveform)
         waveform         = waveform/waveform.max()
         waveform         = np.reshape(waveform,[1,np.amax(waveform.shape)])
         forward,backward = self.latencymodel.predict(waveform),self.latencymodel.predict(waveform[::-1])
