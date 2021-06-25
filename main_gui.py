@@ -20,7 +20,7 @@ from PyQt5.QtCore import QEvent, QRect
 from ffrgui.dsp       import Signal
 from ffrgui.gui       import PatientTable,SpectralWidget,TemporalWidget,LatencyPlotWidget, FileDialog
 from ffrgui.utilities import Workspace,FFR_Utils,DataBase, Constants
-from ffrgui.neuralnet import DeepFilter
+from ffrgui.neuralnet import DeepFilter, LatencyNet
 
 
 
@@ -45,6 +45,7 @@ class Ui_MainWindow(object):
         self.const   = Constants.Constants()
         ##############################
         self.deepfilter = DeepFilter.DeepFilter(self)
+        self.latencynet  = LatencyNet.LatencyNet(self)
         ##############################
         self.database  = DataBase.DataBase(self)
         self.database.load()

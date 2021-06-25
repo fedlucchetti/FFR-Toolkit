@@ -13,6 +13,7 @@ class Signal(object):
         self.const = maingui.const
         self.workspace = maingui.workspace
         self.deepfilter = maingui.deepfilter
+        self.latencynet = maingui.latencynet
 
     def normalize_waveforms(self,waveforms):
         n_sc     = 0
@@ -91,6 +92,22 @@ class Signal(object):
 
         return phase_diff
 
+    def gaussian(self,mu,sigma=1):
+        """
+        units in [ms]
+        """
+        y = 1/(sigma * np.sqrt(2 * np.pi)) * \
+            np.exp( - (self.const.t*1000-mu)**2 / (2 * sigma**2))
+        return y/max(y)
+
+    def get_onet_offset_dist(self,waveform):
+        ton_list,toff_list = self.latencynet.get(waveform)
+        ton_dist,toff_dist  = np.zeros(self.const.Nt),np.zeros(self.const.Nt)
+        for idt in ton_list:
+            ton_dist+=self.gaussian(idt*self.const.dt*1000)
+        for idt in toff_list:
+            toff_dist+=self.gaussian(idt*self.const.dt*1000)
+        return ton_dist,toff_dist
 
     def offset_waveforms(self,waveforms):
 

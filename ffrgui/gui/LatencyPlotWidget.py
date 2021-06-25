@@ -103,14 +103,20 @@ class LatencyPlotWidget():
         except:pass
         sig_waveform, _      = self.workspace.get_waveform(self.maingui.current_id,flag='filtered')
         envelope = self.sig.get_envelope(sig_waveform)
+        ton_dist,toff_dist = self.sig.get_onet_offset_dist(sig_waveform)
         self.signal = pg.PlotDataItem(self.const.t*1000,sig_waveform/max(sig_waveform),pen=pg.mkPen('w', width=2))
         self.envelope1 = pg.PlotDataItem(self.const.t*1000,envelope,pen=pg.mkPen('b', width=2))
         self.envelope2 = pg.PlotDataItem(self.const.t*1000,-envelope,pen=pg.mkPen('b', width=2))
         self.phase     = pg.PlotDataItem(self.const.t*1000,self.sig.get_diffenvelope(sig_waveform),pen=pg.mkPen('g', width=2))
+        self.on_latency  = pg.PlotDataItem(self.const.t*1000,ton_dist,fillLevel=0,brush=(0,255,0,50),fillOutline=False, width=0)
+        self.off_latency = pg.PlotDataItem(self.const.t*1000,toff_dist,fillLevel=0,brush=(255,0,0,50),fillOutline=False, width=0)
+
         self.latencyPlot.addItem(self.signal)
         self.latencyPlot.addItem(self.envelope1)
         self.latencyPlot.addItem(self.envelope2)
         self.latencyPlot.addItem(self.phase)
+        self.latencyPlot.addItem(self.on_latency)
+        self.latencyPlot.addItem(self.off_latency)
         self.latencyPlot.update()
 
     def createPlot(self):
@@ -123,14 +129,21 @@ class LatencyPlotWidget():
 
         sig_waveform, _      = self.workspace.get_waveform(self.maingui.current_id,flag='filtered')
         envelope = self.sig.get_envelope(sig_waveform)
+        ton_dist,toff_dist = self.sig.get_onet_offset_dist(sig_waveform)
         self.signal = pg.PlotDataItem(self.const.t*1000,sig_waveform/max(sig_waveform),pen=pg.mkPen('w', width=2))
-        self.envelope1 = pg.PlotDataItem(self.const.t*1000,envelope,pen=pg.mkPen('b', width=2))
-        self.envelope2 = pg.PlotDataItem(self.const.t*1000,-envelope,pen=pg.mkPen('b', width=2))
-        self.phase     = pg.PlotDataItem(self.const.t*1000,self.sig.get_diffenvelope(sig_waveform),pen=pg.mkPen('g', width=2))
+        self.envelope1   = pg.PlotDataItem(self.const.t*1000,envelope,pen=pg.mkPen('b', width=2))
+        self.envelope2   = pg.PlotDataItem(self.const.t*1000,-envelope,pen=pg.mkPen('b', width=2))
+        self.phase       = pg.PlotDataItem(self.const.t*1000,self.sig.get_diffenvelope(sig_waveform),pen=pg.mkPen('g', width=2))
+        self.on_latency  = pg.PlotDataItem(self.const.t*1000,ton_dist,fillLevel=0,brush=(0,255,0,50),fillOutline=False, width=0)
+        self.off_latency = pg.PlotDataItem(self.const.t*1000,toff_dist,fillLevel=0,brush=(255,0,0,50),fillOutline=False, width=0)
+
         self.latencyPlot.addItem(self.signal)
         self.latencyPlot.addItem(self.envelope1)
         self.latencyPlot.addItem(self.envelope2)
         self.latencyPlot.addItem(self.phase)
+        self.latencyPlot.addItem(self.on_latency)
+        self.latencyPlot.addItem(self.off_latency)
+
         self.latencyPlot.showGrid(x=True, y=True)
         self.latencyPlot.setLabel('left', "Amplitude [nV]")
         self.latencyPlot.setLabel('bottom', "Time [ms]",fontsize=20)
