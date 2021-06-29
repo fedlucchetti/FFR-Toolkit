@@ -95,7 +95,7 @@ class Workspace(object):
                 onset=float(_x.replace(',','.'))
             else: onset =  _x
         except Exception as e:
-            print("get_on_offset: first",e,"  _x",_x)
+            # print("get_on_offset: first",e,"  _x",_x)
             onset=-1
         _x = self.current_workspace[id]["Data"]["original"]["analysis"]["Lenght"]
         try:
@@ -103,7 +103,7 @@ class Workspace(object):
                 offset = onset + float(_x.replace(',','.'))
             else: offset = onset + _x
         except Exception as e:
-            print("get_on_offset: second",e,"  _x",_x)
+            # print("get_on_offset: second",e,"  _x",_x)
             offset = -1
 
 
