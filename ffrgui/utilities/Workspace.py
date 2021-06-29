@@ -153,7 +153,7 @@ class Workspace(object):
         out=self.filedialog.showdialog(message)
         if out:
             with open(self.maingui.current_json, 'w') as outfile:
-                json.dump(json_data, outfile)
+                json.dump(json_data, outfile,ensure_ascii=False)
             print("Changes written to file", self.maingui.current_json)
 
 
