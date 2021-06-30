@@ -25,19 +25,14 @@ class LatencyPlotWidget():
         self.sig       = maingui.sig
         self.const     = maingui.const
         self.workspace = maingui.workspace
-
         self.TMAX            = 1000*max(self.const.t)
-
-
-
-
 
     def initUI(self,flag='new'):
         try:
             if self.win:self.win.clear()
         except: pass
         self.win = pg.GraphicsLayoutWidget(show=True, title=self.maingui.current_sc)
-        self.win.resize(1200,600)
+        self.win.resize(1400,800)
         self.latencyPlot = self.win.addPlot(title='')
         # self.latencyPlot.setXRange(0,self.TMAX)
         # self.latencyPlot.setXRange(-1.3,1.3)
@@ -107,7 +102,7 @@ class LatencyPlotWidget():
         self.signal = pg.PlotDataItem(self.const.t*1000,sig_waveform/max(sig_waveform),pen=pg.mkPen('w', width=2))
         self.envelope1 = pg.PlotDataItem(self.const.t*1000,envelope,pen=pg.mkPen('b', width=2))
         self.envelope2 = pg.PlotDataItem(self.const.t*1000,-envelope,pen=pg.mkPen('b', width=2))
-        self.phase     = pg.PlotDataItem(self.const.t*1000,self.sig.get_diffenvelope(sig_waveform),pen=pg.mkPen('g', width=2))
+        self.phase     = pg.PlotDataItem(self.const.t*1000,self.sig.get_diffenvelope(sig_waveform)-2,pen=pg.mkPen('g', width=2))
         self.on_latency  = pg.PlotDataItem(self.const.t*1000,ton_dist,fillLevel=0,brush=(0,255,0,50),fillOutline=False, width=0)
         self.off_latency = pg.PlotDataItem(self.const.t*1000,toff_dist,fillLevel=0,brush=(255,0,0,50),fillOutline=False, width=0)
 
@@ -133,7 +128,7 @@ class LatencyPlotWidget():
         self.signal = pg.PlotDataItem(self.const.t*1000,sig_waveform/max(sig_waveform),pen=pg.mkPen('w', width=2))
         self.envelope1   = pg.PlotDataItem(self.const.t*1000,envelope,pen=pg.mkPen('b', width=2))
         self.envelope2   = pg.PlotDataItem(self.const.t*1000,-envelope,pen=pg.mkPen('b', width=2))
-        self.phase       = pg.PlotDataItem(self.const.t*1000,self.sig.get_diffenvelope(sig_waveform),pen=pg.mkPen('g', width=2))
+        self.phase       = pg.PlotDataItem(self.const.t*1000,self.sig.get_diffenvelope(sig_waveform)-2,pen=pg.mkPen('g', width=2))
         self.on_latency  = pg.PlotDataItem(self.const.t*1000,ton_dist,fillLevel=0,brush=(0,255,0,50),fillOutline=False, width=0)
         self.off_latency = pg.PlotDataItem(self.const.t*1000,toff_dist,fillLevel=0,brush=(255,0,0,50),fillOutline=False, width=0)
 
@@ -153,7 +148,7 @@ class LatencyPlotWidget():
         self.latencyPlot.getAxis("left").tickFont = font
         self.latencyPlot.getAxis("bottom").tickFont = font
         self.latencyPlot.setXRange(0,self.TMAX, padding=0)
-        self.latencyPlot.setYRange(-1.4,1.4, padding=0)
+        self.latencyPlot.setYRange(-2.0,1.2, padding=0)
         self.latencyPlot.setLimits(xMin=0,xMax=self.TMAX,yMin=-1.4,yMax=1.4)
         self.latencyPlot.update()
 
@@ -164,9 +159,10 @@ class LatencyPlotWidget():
     def __cursor_moved(self,cursor):
         if cursor.name()=="onsetCursor":
             self.workspace.onset = float(cursor.value())
+            cursor.label.setText("{:.1f}".format(self.workspace.onset))
         elif cursor.name()=="offsetCursor":
             self.workspace.offset = float(cursor.value())
-        cursor.label.setText("{:.1f}".format(cursor.value()))
+            cursor.label.setText("{:.1f}".format(self.workspace.offset-self.workspace.onset))
 
 
 
@@ -180,7 +176,7 @@ class LatencyPlotWidget():
             xpos_onset  = np.random.randint(5,self.TMAX,1)[0]
             xpos_offset = xpos_onset+57
             on_color = pg.mkPen((255, 255, 0,255))
-            off_color = pg.mkPen((255, 255, 0,255))
+            off_color = pg.mkPenself.workspace.offset-((255, 255, 0,255))
 
         elif flag=='load':
             xpos_onset,xpos_offset  = self.workspace.get_on_offset(self.maingui.current_id)

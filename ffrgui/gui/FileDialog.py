@@ -42,7 +42,9 @@ class FileDialog(QWidget):
     def saveFileDialog(self):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
-        fileName, _ = QFileDialog.getSaveFileName(self,"QFileDialog.getSaveFileName()",self.maingui.WORKDIR,"All Files (*);;JSON Files (*.json)", options=options)
+        fileName, _ = QFileDialog.getSaveFileName(self,"Save to",self.maingui.WORKDIR,\
+                                                 "All Files (*);;JSON Files (*.json)",\
+                                                  options=options)
         # self.show()
         if fileName:
             return fileName

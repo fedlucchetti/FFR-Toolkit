@@ -107,7 +107,7 @@ class Signal(object):
             ton_dist+=self.gaussian(idt*self.const.dt*1000)
         for idt in toff_list:
             toff_dist+=self.gaussian(idt*self.const.dt*1000)
-        return ton_dist,toff_dist
+        return ton_dist/max(ton_dist),toff_dist/max(toff_dist)
 
     def offset_waveforms(self,waveforms):
 
