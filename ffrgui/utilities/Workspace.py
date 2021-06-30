@@ -172,9 +172,10 @@ class Workspace(object):
     def load(self):
         self.filedialog = self.maingui.filedialog
         filename = self.filedialog.openFileNameDialog()
-        with open(filename, 'r') as outfile:
-            self.current_workspace = self.__deserialize(json.load(outfile))
-        self.maingui.update_temporal_plot()
+        if filename!=False:
+            with open(filename, 'r') as outfile:
+                self.current_workspace = self.__deserialize(json.load(outfile))
+            self.maingui.update_temporal_plot()
 
     def __deserialize(self,datajson):
         return {k:v for k,v in datajson.items()}

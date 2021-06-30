@@ -28,9 +28,12 @@ class FileDialog(QWidget):
     def openFileNameDialog(self):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
-        fileName, _ = QFileDialog.getOpenFileName(self,"QFileDialog.getOpenFileName()", self.maingui.WORKDIR,"All Files (*);;JSON Files (*.txt)", options=options)
+        fileName, _ = QFileDialog.getOpenFileName(self,"QFileDialog.getOpenFileName()",\
+                                                  self.maingui.WORKDIR,"JSON Files (*.json)", \
+                                                  options=options)
         if fileName:
             return fileName
+        else: return False
 
     def openFileNamesDialog(self):
         options = QFileDialog.Options()
