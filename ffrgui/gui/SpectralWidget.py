@@ -39,7 +39,7 @@ class SpectralWidget():
             else:
                 self.win = pg.GraphicsLayoutWidget(show=True, title=self.maingui.current_sc)
         except Exception as e:
-            print('SpectralWidget initUI:', e)
+            # print('SpectralWidget initUI:', e)
             self.win = pg.GraphicsLayoutWidget(show=True, title=self.maingui.current_sc)
         self.win.resize(1000,600)
         self.spectral = self.win.addPlot(title='')
@@ -204,7 +204,7 @@ class SpectralWidget():
             if self.cursor_xpos:pass
             else:self.cursor_xpos=500
         except Exception as e:
-            print("Spectral widget: __add_cursor",e)
+            # print("Spectral widget: __add_cursor",e)
             self.cursor_xpos=500
         self.cursor = pg.InfiniteLine(pos=self.cursor_xpos,pen=pg.mkPen('y', width=4),\
                                 markers = '<|>',label=str(self.cursor_xpos) )
