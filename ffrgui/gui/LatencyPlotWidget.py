@@ -160,6 +160,7 @@ class LatencyPlotWidget():
         if cursor.name()=="onsetCursor":
             self.workspace.onset = float(cursor.value())
             cursor.label.setText("{:.1f}".format(self.workspace.onset))
+            self._offsetcursor.label.setText("{:.1f}".format(self._offsetcursor.value()-cursor.value()))
         elif cursor.name()=="offsetCursor":
             self.workspace.offset = float(cursor.value())
             cursor.label.setText("{:.1f}".format(self.workspace.offset-self.workspace.onset))
@@ -189,7 +190,7 @@ class LatencyPlotWidget():
                                  label=str(5),bounds=[0,max(self.const.t)*1000],
                                  name="onsetCursor",movable=True)
         _onsetcursor.label.setMovable(True)
-        _onsetcursor.label.setPosition(0.9)
+        _onsetcursor.label.setPosition(0.95)
         _onsetcursor.label.setColor(pg.mkColor((255, 200, 0,255)))
         _onsetcursor.label.setFont(QFont("Times", 20, QFont.Bold))
         _onsetcursor.label.setText("{:.1f}".format(_onsetcursor.value()))
@@ -201,7 +202,7 @@ class LatencyPlotWidget():
                                  label=str(5),bounds=[0,max(self.const.t)*1000],
                                  name="offsetCursor",movable=True)
         _offsetcursor.label.setMovable(True)
-        _offsetcursor.label.setPosition(0.9)
+        _offsetcursor.label.setPosition(0.95)
         _offsetcursor.label.setColor(pg.mkColor((255, 200, 0,255)))
         _offsetcursor.label.setFont(QFont("Times", 20, QFont.Bold))
         _offsetcursor.label.setText("{:.1f}".format(_offsetcursor.value()))
