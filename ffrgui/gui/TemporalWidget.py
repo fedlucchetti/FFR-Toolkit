@@ -239,10 +239,9 @@ class TemporalWidget():
 
 
     def delete_cursor(self,cursorbutton):
-        print(self.cursor_list)
+        # print(self.cursor_list)
         _tmp = np.array(self.cursor_list)
         idx = np.where(_tmp[:,1] == cursorbutton)[0][0]
-        print(idx)
         cursorbutton = self.cursor_list[idx][1]
         cursor = self.cursor_list[idx][0]
         del self.cursor_list[idx]

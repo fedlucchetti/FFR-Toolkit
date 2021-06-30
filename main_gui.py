@@ -41,6 +41,7 @@ class Ui_MainWindow(object):
         self.current_json  = None
         self.current_sc    = 'EFR V'
         self.current_id    = "1"
+        self.current_code  = ""
         ##############################
         self.const   = Constants.Constants()
         ##############################

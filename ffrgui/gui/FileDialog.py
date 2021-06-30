@@ -41,13 +41,14 @@ class FileDialog(QWidget):
 
     def saveFileDialog(self):
         options = QFileDialog.Options()
-        options |= QFileDialog.DontUseNativeDialog
-        fileName, _ = QFileDialog.getSaveFileName(self,"Save to",self.maingui.WORKDIR,\
-                                                 "All Files (*);;JSON Files (*.json)",\
+        # options |= QFileDialog.DontUseNativeDialog
+        fileName, _ = QFileDialog.getSaveFileName(self,"Save to",os.path.join(self.maingui.WORKDIR,self.maingui.current_code+'.json'),\
+                                                 "JSON Files (*.json)",\
                                                   options=options)
-        # self.show()
         if fileName:
             return fileName
+        else:
+            return False
 
     def showdialog(self,message):
         msg = QMessageBox()
@@ -62,7 +63,7 @@ class FileDialog(QWidget):
         msg.setFixedSize(640, 480)
 
         retval = msg.exec_()
-        print("value of pressed message box button:", retval)
+        # print("value of pressed message box button:", retval)
         if retval==1024: return 1
         elif retval==4194304: return 0
         else: return 0

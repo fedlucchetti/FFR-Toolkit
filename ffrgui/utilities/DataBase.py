@@ -172,7 +172,7 @@ class DataBase(object):
                                        'f2'            : str(f2),
                                        'ear'           : ear,
                                        'level'         : level,
-                                       'code'          : ''.join([nom,' ',prenom,year+number,ear,level,'f1'+str(f1)+'f2'+str(f2) ]),
+                                       'code'          : ''.join([year+number+"_",ear,level,'_f1_'+str(f1)+'_f2_'+str(f2) ]),
                                        'path2json'     : path2json
                                        }
                             }

@@ -85,6 +85,8 @@ class PatientTable(QWidget):
         print("\n")
         for currentQTableWidgetItem in self.tableWidget.selectedItems():
             self.maingui.current_json = self.tableWidget.item(currentQTableWidgetItem.row(),7).text()
+            self.maingui.current_code = self.database.database[str(currentQTableWidgetItem.row())]['code']
+            print("on_click: ",self.database.database[str(currentQTableWidgetItem.row())]['code'])
 
 
 

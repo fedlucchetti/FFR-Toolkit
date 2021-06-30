@@ -83,7 +83,7 @@ class Workspace(object):
         except: return {}
 
     def set_on_offset(self):
-        print("set_on_offset",self.onset,self.offset)
+        # print("set_on_offset",self.onset,self.offset)
         self.current_workspace[self.maingui.current_id]["Data"]["original"]["analysis"]["Latency"] = self.onset
         self.current_workspace[self.maingui.current_id]["Data"]["original"]["analysis"]["Lenght"] = self.offset-self.onset
 
@@ -163,8 +163,9 @@ class Workspace(object):
         outjson = self.__serialize(self.current_workspace)
         self.filedialog = self.maingui.filedialog
         filename = self.filedialog.saveFileDialog()
-        with open(filename, 'w') as outfile:
-            json.dump(outjson, outfile)
+        if filename != False:
+            with open(filename, 'w') as outfile:
+                json.dump(outjson, outfile)
 
 
 

@@ -103,8 +103,8 @@ class LatencyPlotWidget():
         self.envelope1 = pg.PlotDataItem(self.const.t*1000,envelope,pen=pg.mkPen('b', width=2))
         self.envelope2 = pg.PlotDataItem(self.const.t*1000,-envelope,pen=pg.mkPen('b', width=2))
         self.phase     = pg.PlotDataItem(self.const.t*1000,self.sig.get_diffenvelope(sig_waveform)-2,pen=pg.mkPen('g', width=2))
-        self.on_latency  = pg.PlotDataItem(self.const.t*1000,ton_dist,fillLevel=0,brush=(0,255,0,50),fillOutline=False, width=0)
-        self.off_latency = pg.PlotDataItem(self.const.t*1000,toff_dist,fillLevel=0,brush=(255,0,0,50),fillOutline=False, width=0)
+        self.on_latency  = pg.PlotDataItem(self.const.t*1000,ton_dist,fillLevel=0,brush=(0,255,0,70),fillOutline=False, width=0)
+        self.off_latency = pg.PlotDataItem(self.const.t*1000,toff_dist,fillLevel=0,brush=(255,0,0,70),fillOutline=False, width=0)
 
         self.latencyPlot.addItem(self.signal)
         self.latencyPlot.addItem(self.envelope1)
@@ -129,8 +129,8 @@ class LatencyPlotWidget():
         self.envelope1   = pg.PlotDataItem(self.const.t*1000,envelope,pen=pg.mkPen('b', width=2))
         self.envelope2   = pg.PlotDataItem(self.const.t*1000,-envelope,pen=pg.mkPen('b', width=2))
         self.phase       = pg.PlotDataItem(self.const.t*1000,self.sig.get_diffenvelope(sig_waveform)-2,pen=pg.mkPen('g', width=2))
-        self.on_latency  = pg.PlotDataItem(self.const.t*1000,ton_dist,fillLevel=0,brush=(0,255,0,50),fillOutline=False, width=0)
-        self.off_latency = pg.PlotDataItem(self.const.t*1000,toff_dist,fillLevel=0,brush=(255,0,0,50),fillOutline=False, width=0)
+        self.on_latency  = pg.PlotDataItem(self.const.t*1000,ton_dist,fillLevel=0,brush=(0,255,0,70),fillOutline=False, width=0)
+        self.off_latency = pg.PlotDataItem(self.const.t*1000,toff_dist,fillLevel=0,brush=(255,0,0,70),fillOutline=False, width=0)
 
         self.latencyPlot.addItem(self.signal)
         self.latencyPlot.addItem(self.envelope1)
