@@ -12,7 +12,7 @@ from pyqtgraph.Qt import QtGui
 
 import numpy as np
 import pyqtgraph as pg
-
+import matplotlib
 
 font=QtGui.QFont()
 font.setPixelSize(30)
@@ -102,7 +102,7 @@ class LatencyPlotWidget():
         self.signal = pg.PlotDataItem(self.const.t*1000,sig_waveform/max(sig_waveform),pen=pg.mkPen('w', width=2))
         self.envelope1 = pg.PlotDataItem(self.const.t*1000,envelope,pen=pg.mkPen('b', width=2))
         self.envelope2 = pg.PlotDataItem(self.const.t*1000,-envelope,pen=pg.mkPen('b', width=2))
-        self.phase     = pg.PlotDataItem(self.const.t*1000,self.sig.get_diffenvelope(sig_waveform)-2,pen=pg.mkPen('g', width=2))
+        self.phase     = pg.PlotDataItem(self.const.t*1000,self.sig.get_diffenvelope(sig_waveform,scaled=True)-2,pen=pg.mkPen('g', width=2))
         self.on_latency  = pg.PlotDataItem(self.const.t*1000,ton_dist,fillLevel=0,brush=(0,255,0,70),fillOutline=False, width=0)
         self.off_latency = pg.PlotDataItem(self.const.t*1000,toff_dist,fillLevel=0,brush=(255,0,0,70),fillOutline=False, width=0)
 
@@ -128,9 +128,12 @@ class LatencyPlotWidget():
         self.signal = pg.PlotDataItem(self.const.t*1000,sig_waveform/max(sig_waveform),pen=pg.mkPen('w', width=2))
         self.envelope1   = pg.PlotDataItem(self.const.t*1000,envelope,pen=pg.mkPen('b', width=2))
         self.envelope2   = pg.PlotDataItem(self.const.t*1000,-envelope,pen=pg.mkPen('b', width=2))
-        self.phase       = pg.PlotDataItem(self.const.t*1000,self.sig.get_diffenvelope(sig_waveform)-2,pen=pg.mkPen('g', width=2))
+        self.phase       = pg.PlotDataItem(self.const.t*1000,self.sig.get_diffenvelope(sig_waveform,scaled=True)-2,pen=pg.mkPen('g', width=2))
         self.on_latency  = pg.PlotDataItem(self.const.t*1000,ton_dist,fillLevel=0,brush=(0,255,0,70),fillOutline=False, width=0)
         self.off_latency = pg.PlotDataItem(self.const.t*1000,toff_dist,fillLevel=0,brush=(255,0,0,70),fillOutline=False, width=0)
+        self.w_plv       = pg.TextItem('PLV',color=(255, 0, 255))  
+        self.w_plv.setPos(75,-1.5)
+        self.w_plv.setFont(QFont("Times", 20, QFont.Bold))
 
         self.latencyPlot.addItem(self.signal)
         self.latencyPlot.addItem(self.envelope1)
@@ -138,6 +141,7 @@ class LatencyPlotWidget():
         self.latencyPlot.addItem(self.phase)
         self.latencyPlot.addItem(self.on_latency)
         self.latencyPlot.addItem(self.off_latency)
+        self.latencyPlot.addItem(self.w_plv)
 
         self.latencyPlot.showGrid(x=True, y=True)
         self.latencyPlot.setLabel('left', "Amplitude [nV]")
@@ -165,8 +169,18 @@ class LatencyPlotWidget():
             self.workspace.offset = float(cursor.value())
             cursor.label.setText("{:.1f}".format(self.workspace.offset-self.workspace.onset))
 
+        #Update windowed PLV
+        sig_waveform, _ = self.workspace.get_waveform(self.maingui.current_id,flag='filtered')
+        _w_plv = self.sig.get_wind_plv(self.sig.get_diffenvelope(sig_waveform))
+        self.w_plv.setText(str("{:.3f}".format(_w_plv)))
+        self.w_plv.setColor(self.colormapPLV(int(_w_plv*100)))
 
-
+    def colormapPLV(self,plv):
+        cmap = matplotlib.cm.get_cmap('jet')
+        norm = matplotlib.colors.Normalize(vmin=0, vmax=1)
+        rgba = cmap(norm(np.arange(0,1.01,0.01)))*255
+        rgb  = (int(rgba[plv][0]),int(rgba[plv][1]),int(rgba[plv][2]))
+        return rgb
 
     def __add_on_offset_cursors(self,flag):
         if flag=='new':

@@ -77,7 +77,7 @@ class Signal(object):
         # dc = np.mean(waveform)
         return self.deepfilter.get_envelope(waveform)
 
-    def get_diffenvelope(self,waveform):
+    def get_diffenvelope(self,waveform,scaled=False):
         # TO DO #
         # dc = np.mean(waveform)
         # return self.deepfilter.get_diffphase(waveform)
@@ -87,10 +87,25 @@ class Signal(object):
         y          = np.sin(2 * np.pi * f_sc * np.arange(self.const.Nt) / self.const.fs)
         ip_sin     = np.unwrap(np.angle(signal.hilbert(y)))
         phase_diff = np.abs(ip_wav - ip_sin)
-        scale      = phase_diff.max()
-        phase_diff = phase_diff/scale
+        if scaled:
+            scale      = phase_diff.max()
+            phase_diff = phase_diff/scale
 
         return phase_diff
+    
+    def get_wind_plv(self,phase_diff): #windowed PLV
+        onset = int(self.workspace.onset/1000*self.const.fs)
+        if (self.workspace.offset) == 0:
+            offset = self.const.Nt
+        else:
+            offset = int(self.workspace.offset/1000*self.const.fs)
+
+        _plv = np.empty(np.abs(offset-onset), dtype='complex')
+        for i,j in enumerate(range(onset,offset)):
+            _plv[i] = np.exp(complex(0,phase_diff[j]))
+        w_plv = np.abs(np.sum(_plv, axis=0)/len(_plv))
+
+        return w_plv
 
     def gaussian(self,mu,sigma=1):
         """
