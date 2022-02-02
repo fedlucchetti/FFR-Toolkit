@@ -192,12 +192,6 @@ class DataBase(object):
         # print("load_Analysis", analysis)
         return analysis
 
-
-
-
-
-
-
     def get_frequency(self,SCstring):
         metadata = self.get_metadata()
         f1       = float(metadata["Stimulus"]["F1"])
