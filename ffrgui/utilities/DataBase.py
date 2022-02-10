@@ -2,6 +2,7 @@ import sys, json, copy, os, platform
 import numpy as np
 from scipy import signal
 from PyQt5 import  QtGui
+from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QMessageBox
 from os.path import split, join
 from fnmatch import fnmatch
@@ -94,10 +95,10 @@ class DataBase(object):
         dbconfpathfile      = os.path.join(self.maingui.CONFDIR,'databasepath.json')
 
         if not os.path.exists(dbconfpathfile) or flag :
-            destDir = QtGui.QFileDialog.getExistingDirectory(None,
+            destDir = QtWidgets.QFileDialog.getExistingDirectory(None,
                                                              'Open working directory',
                                                              ".",
-                                                             QtGui.QFileDialog.ShowDirsOnly)
+                                                             QtWidgets.QFileDialog.ShowDirsOnly)
             out = {'databasepath':self.__split_path(destDir)}
 
             def popup_button(i):	self.button_text = i.text()
