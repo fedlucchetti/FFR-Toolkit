@@ -198,24 +198,55 @@ class DataBase(object):
         f1       = float(metadata["Stimulus"]["F1"])
         f2       = float(metadata["Stimulus"]["F2"])
 
-        f        = None
-        if SCstring[0:2] == 'F1' :
-            f = f1
-        elif SCstring[0:2] == 'F2':
-            f = f2
-        elif SCstring[0:3] == 'EFR'    or fnmatch(SCstring, 'ENV') or SCstring[0:3]=='EFR':
-            f = f2-f1
-        elif SCstring[0:5] == 'EFR**'  or SCstring[0:4] == 'DENV'  or SCstring[0:5] == 'ENV**':
-            f = 2*(f1-f2)
-        elif SCstring[0:6] == 'EFR***' or SCstring[0:5] == 'DDENV' or SCstring[0:6] == 'ENV***':
-            f = 3*(f1-f2)
-        elif SCstring[0:3] == 'CDT':
-            f = 2*f1-f2
-        elif SCstring[0:4] == 'CDT*':
-            f = 2*f2-f1
-        elif SCstring[0:3] == 'ABR':
-            f = 80
+        if metadata["Stimulus"]["Type"] != 'AM':
+            f = None
+            if SCstring[0:2] == 'F1' :
+                f = f1
+            elif SCstring[0:2] == 'F2':
+                f = f2
+            elif SCstring[0:3] == 'EFR'    or fnmatch(SCstring, 'ENV') or SCstring[0:3]=='EFR':
+                f = f2-f1
+            elif SCstring[0:5] == 'EFR**'  or SCstring[0:4] == 'DENV'  or SCstring[0:5] == 'ENV**':
+                f = 2*(f1-f2)
+            elif SCstring[0:6] == 'EFR***' or SCstring[0:5] == 'DDENV' or SCstring[0:6] == 'ENV***':
+                f = 3*(f1-f2)
+            elif SCstring[0:3] == 'CDT':
+                f = 2*f1-f2
+            elif SCstring[0:4] == 'CDT*':
+                f = 2*f2-f1
+            elif SCstring[0:3] == 'ABR':
+                f = 80
+            else:
+                print('SC string not valid')
+
         else:
-            print('SC string not valid')
+            f3 = float(metadata["Stimulus"]["F3"])
+            f  = None
+            if SCstring[0:2] == 'F1' :
+                f = f1
+            elif SCstring[0:2] == 'F2':
+                f = f2
+            elif SCstring[0:2] == 'F3':
+                f = f3
+            elif SCstring[0:5] == 'ENV12':
+                f = f2-f1
+            elif SCstring[0:5] == 'ENV23':
+                f = f3-f2
+            elif SCstring[0:5] == 'ENV13':
+                f = f3-f1
+            elif SCstring[0:6] == 'DENV12':
+                f = 2*(f1-f2)
+            elif SCstring[0:6] == 'DENV13':
+                f = 3*(f1-f2)
+            elif SCstring[0:5] == 'CDT12':
+                f = 2*f1-f2
+            elif SCstring[0:5] == 'CDT23':
+                f = 2*f2-f3
+            elif SCstring[0:4] == 'CDT13':
+                f = 2*f1-f3
+            elif SCstring[0:3] == 'ABR':
+                f = 80
+            else:
+                print('SC string not valid')
 
         return f
