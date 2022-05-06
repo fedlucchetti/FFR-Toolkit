@@ -36,7 +36,7 @@ class FFR_Utils():
 
 
 
-        self.database.select_db_path(False)
+        # self.database.select_db_path(False)
 
         self.path_conf     = os.path.join(self.maingui.CONFDIR,"display.json")
         with open(self.path_conf) as data_file:
@@ -100,7 +100,7 @@ class FFR_Utils():
 
     def load_json(self):
         data = []
-        with open(self.path) as data_file: data = json.load(data_file)
+        with open(self.maingui.current_json) as data_file: data = json.load(data_file)
         return data
 
     def load_AVG(self,sc_string,channel):
@@ -399,3 +399,30 @@ class FFR_Utils():
                 pass
                 #plt.show()
             plt.close()
+
+    def generate_stimulus(self,ENV = False):
+        # Stimulus
+        onset    = round(5/1000*self.const.fs)   # 5 ms
+        length   = round(57/1000*self.const.fs)  # 55 ms
+        risefall = round(1/1000*self.const.fs)   # rise and fall time
+        t_gate   = self.const.dt*np.array([x for x in range(risefall)])
+
+        f1    = self.maingui.database.get_frequency("F1")
+        f2    = self.maingui.database.get_frequency("F1")
+        data  = self.load_json()
+        a1    = float(data["MetaData"]['Stimulus']['V1[V]'])
+        a2    = float(data["MetaData"]['Stimulus']['V2[V]']) 
+       
+        pause = np.zeros(onset)
+        on    = np.ones(length)
+        cos2  = np.square(np.cos(2*np.pi*250*t_gate))
+        gate  = np.concatenate((pause,np.flip(cos2),on,cos2))
+        end   = np.zeros(self.const.Nt-len(gate))
+        gate  = np.append(gate,end)
+
+        f_efr    = self.maingui.database.get_frequency("EFR")
+        stimulus = np.sin(2*np.pi*f_efr*self.const.t) #stimulus =  a1*np.sin(2*np.pi*f1*self.const.t+np.pi/2) + a2*np.sin(2*np.pi*f2*self.const.t-np.pi/2)
+        stimulus = np.append(pause,stimulus)[0:self.const.Nt]
+        stimulus = np.multiply(stimulus,gate)
+
+        return stimulus

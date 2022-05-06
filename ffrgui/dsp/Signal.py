@@ -14,6 +14,7 @@ class Signal(object):
         self.workspace = maingui.workspace
         self.deepfilter = maingui.deepfilter
         self.latencynet = maingui.latencynet
+        self.ffrutils   = maingui.ffrutils 
 
     def normalize_waveforms(self,waveforms):
         n_sc     = 0
@@ -135,6 +136,38 @@ class Signal(object):
 
 
         return _waveforms
+
+    def cross_corr_stim(self,waveform):
+        # Stimulus
+        onset    = round(5/1000*self.const.fs)   # 5 ms
+        length   = round(57/1000*self.const.fs)  # 55 ms
+        risefall = round(1/1000*self.const.fs)   # rise and fall time
+        t_gate   = self.const.dt*np.array([x for x in range(risefall)])
+
+        f1    = self.maingui.database.get_frequency("F1")
+        f2    = self.maingui.database.get_frequency("F1")
+        data  = self.ffrutils.load_json()
+        a1    = float(data["MetaData"]['Stimulus']['V1[V]'])
+        a2    = float(data["MetaData"]['Stimulus']['V2[V]']) 
+       
+        pause = np.zeros(onset)
+        on    = np.ones(length)
+        cos2  = np.square(np.cos(2*np.pi*250*t_gate))
+        gate  = np.concatenate((pause,np.flip(cos2),on,cos2))
+        end   = np.zeros(self.const.Nt-len(gate))
+        gate  = np.append(gate,end)
+
+        f_efr    = self.maingui.database.get_frequency("EFR")
+        stimulus = np.sin(2*np.pi*f_efr*self.const.t) #stimulus =  a1*np.sin(2*np.pi*f1*self.const.t+np.pi/2) + a2*np.sin(2*np.pi*f2*self.const.t-np.pi/2)
+        stimulus = np.append(pause,stimulus)[0:self.const.Nt]
+        stimulus = np.multiply(stimulus,gate)
+
+        #Cross correlation
+        corr = signal.correlate(waveform, stimulus, mode='same') / np.sqrt(signal.correlate(stimulus,stimulus, mode='same')[int(self.const.Nt/2)] * signal.correlate(waveform, waveform, mode='same')[int(self.const.Nt/2)])
+        delay_arr = np.linspace(-0.5*self.const.Nt/self.const.fs, 0.5*self.const.Nt/self.const.fs, self.const.Nt)
+        delay = delay_arr[np.argmax(corr)]
+
+        return (delay*1000)+5.0
 
     def smooth_plot(self,x,y,window=23):
         xvals        = np.linspace(0,np.max(self.const.f),self.const.Nf*8)

@@ -54,7 +54,7 @@ class Ui_MainWindow(object):
         self.workspace         = Workspace.Workspace(self)
         self.current_workspace = None
         ##############################
-        # self.ffrutils   = FFR_Utils.FFR_Utils(self)
+        self.ffrutils   = FFR_Utils.FFR_Utils(self)
         # self.name,self.number,self.date,self.stim,self.ear,self.level,self.path2json, self.code = self.ffrutils.list_all()
         ##############################
         self.sig   = Signal.Signal(self)

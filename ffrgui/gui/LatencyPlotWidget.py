@@ -105,6 +105,7 @@ class LatencyPlotWidget():
         self.phase     = pg.PlotDataItem(self.const.t*1000,self.sig.get_diffenvelope(sig_waveform,scaled=True)-2,pen=pg.mkPen('g', width=2))
         self.on_latency  = pg.PlotDataItem(self.const.t*1000,ton_dist,fillLevel=0,brush=(0,255,0,70),fillOutline=False, width=0)
         self.off_latency = pg.PlotDataItem(self.const.t*1000,toff_dist,fillLevel=0,brush=(255,0,0,70),fillOutline=False, width=0)
+        self.__add_on_offset_cursors('load') #update the cursor with cross correlation
 
         self.latencyPlot.addItem(self.signal)
         self.latencyPlot.addItem(self.envelope1)
@@ -195,6 +196,13 @@ class LatencyPlotWidget():
 
         elif flag=='load':
             xpos_onset,xpos_offset  = self.workspace.get_on_offset(self.maingui.current_id)
+            if xpos_onset==-1 and (self.maingui.current_id=='0' or self.maingui.current_id=='5'): #only for EFR
+                time_shift = self.sig.cross_corr_stim(self.workspace.get_waveform(self.maingui.current_id,flag='filtered')[0])    
+                xpos_onset = time_shift
+                xpos_offset = time_shift + 57.0
+                self.workspace.onset = xpos_onset
+                self.workspace.offset = xpos_offset
+                print(xpos_onset, xpos_offset)
             on_color = pg.mkPen((0, 255, 0,255))
             off_color = pg.mkPen((255, 0, 0,255))
 
