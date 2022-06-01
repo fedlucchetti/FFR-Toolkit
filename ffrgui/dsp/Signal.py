@@ -14,7 +14,7 @@ class Signal(object):
         self.workspace = maingui.workspace
         self.deepfilter = maingui.deepfilter
         self.latencynet = maingui.latencynet
-        self.ffrutils   = maingui.ffrutils 
+        self.ffrutils   = maingui.ffrutils
 
     def normalize_waveforms(self,waveforms):
         n_sc     = 0
@@ -93,7 +93,7 @@ class Signal(object):
             phase_diff = phase_diff/scale
 
         return phase_diff
-    
+
     def get_wind_plv(self,phase_diff): #windowed PLV
         onset = int(self.workspace.onset/1000*self.const.fs)
         if (self.workspace.offset) == 0:
@@ -120,9 +120,13 @@ class Signal(object):
         ton_list,toff_list = self.latencynet.get(waveform)
         ton_dist,toff_dist  = np.zeros(self.const.Nt),np.zeros(self.const.Nt)
         for idt in ton_list:
-            ton_dist+=self.gaussian(idt*self.const.dt*1000)
+            center = idt*self.const.dt*1000
+            if center < 40:
+                ton_dist+=self.gaussian(center)
         for idt in toff_list:
-            toff_dist+=self.gaussian(idt*self.const.dt*1000)
+            center = idt*self.const.dt*1000
+            if center > 40:
+                toff_dist+=self.gaussian(center)
         return ton_dist/max(ton_dist),toff_dist/max(toff_dist)
 
     def offset_waveforms(self,waveforms):
@@ -148,8 +152,8 @@ class Signal(object):
         f2    = self.maingui.database.get_frequency("F1")
         data  = self.ffrutils.load_json()
         a1    = float(data["MetaData"]['Stimulus']['V1[V]'])
-        a2    = float(data["MetaData"]['Stimulus']['V2[V]']) 
-       
+        a2    = float(data["MetaData"]['Stimulus']['V2[V]'])
+
         pause = np.zeros(onset)
         on    = np.ones(length)
         cos2  = np.square(np.cos(2*np.pi*250*t_gate))
