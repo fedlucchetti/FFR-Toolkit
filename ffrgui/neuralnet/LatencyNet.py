@@ -47,7 +47,7 @@ class LatencyNet(object):
 
     def get(self,waveform,threshold=0.95):
         ongate           = np.zeros([self.Nt])
-        waveform         = self.deepfilter.apply_filter(waveform)
+        # waveform         = self.deepfilter.apply_filter(waveform)
         waveform         = waveform/waveform.max()
         waveform         = np.reshape(waveform,[1,np.amax(waveform.shape)])
         forward,backward = self.latencymodel.predict(waveform),self.latencymodel.predict(waveform[::-1])

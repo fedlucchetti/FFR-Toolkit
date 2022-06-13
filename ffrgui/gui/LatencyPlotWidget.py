@@ -132,7 +132,7 @@ class LatencyPlotWidget():
         self.phase       = pg.PlotDataItem(self.const.t*1000,self.sig.get_diffenvelope(sig_waveform,scaled=True)-2,pen=pg.mkPen('g', width=2))
         self.on_latency  = pg.PlotDataItem(self.const.t*1000,ton_dist,fillLevel=0,brush=(0,255,0,70),fillOutline=False, width=0)
         self.off_latency = pg.PlotDataItem(self.const.t*1000,toff_dist,fillLevel=0,brush=(255,0,0,70),fillOutline=False, width=0)
-        self.w_plv       = pg.TextItem('PLV',color=(255, 0, 255))  
+        self.w_plv       = pg.TextItem('PLV',color=(255, 0, 255))
         self.w_plv.setPos(75,-1.5)
         self.w_plv.setFont(QFont("Times", 20, QFont.Bold))
 
@@ -197,7 +197,7 @@ class LatencyPlotWidget():
         elif flag=='load':
             xpos_onset,xpos_offset  = self.workspace.get_on_offset(self.maingui.current_id)
             if xpos_onset==-1 and (self.maingui.current_id=='0' or self.maingui.current_id=='5'): #only for EFR
-                time_shift = self.sig.cross_corr_stim(self.workspace.get_waveform(self.maingui.current_id,flag='filtered')[0])    
+                time_shift = self.sig.cross_corr_stim(self.workspace.get_waveform(self.maingui.current_id,flag='filtered')[0])
                 xpos_onset = time_shift
                 xpos_offset = time_shift + 57.0
                 self.workspace.onset = xpos_onset
