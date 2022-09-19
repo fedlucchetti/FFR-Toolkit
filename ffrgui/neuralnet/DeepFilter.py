@@ -16,8 +16,11 @@ class DeepFilter(object):
     def __init__(self,maingui):
         print("Initializing DeepFilter  Class with default parameters")
         self.const = maingui.const
-        path2filter_model = os.path.join(split(os.path.realpath(__file__))[0], "models", "EFR_Autoencoder.h5")
-        path2envelope_model = os.path.join(split(os.path.realpath(__file__))[0], "models", "Envelope_model.h5")
+        # path2filter_model = os.path.join(split(os.path.realpath(__file__))[0], "models", "EFR_Autoencoder.h5")
+        # path2envelope_model = os.path.join(split(os.path.realpath(__file__))[0], "models", "Envelope_model.h5")
+
+        path2filter_model = os.path.join(split(os.path.realpath(__file__))[0], "models", "EFR_Autoencoder_220_v01.h5")
+        path2envelope_model = os.path.join(split(os.path.realpath(__file__))[0], "models", "Envelope_model_220_v01.h5")        
         # path2phase_model    = os.path.join(split(os.path.realpath(__file__))[0], "models", "Phase_model.h5")
         self.filtermodel = load_model(path2filter_model,compile=False)
         self.envelopemodel = load_model(path2envelope_model,compile=False)

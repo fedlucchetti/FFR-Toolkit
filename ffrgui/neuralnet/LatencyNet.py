@@ -18,7 +18,8 @@ class LatencyNet(object):
         print("Initializing LatencyNet  Class with default parameters")
         self.const = maingui.const
         self.deepfilter = maingui.deepfilter
-        path2latency_model = os.path.join(split(os.path.realpath(__file__))[0], "models", "LatencyNetwork.h5")
+        # path2latency_model = os.path.join(split(os.path.realpath(__file__))[0], "models", "LatencyNetwork.h5")
+        path2latency_model = os.path.join(split(os.path.realpath(__file__))[0], "models", "OnsetNetwork_220_v01.h5")
         self.latencymodel  = load_model(path2latency_model,compile=False)
 
         self.fs            = self.const.fs
